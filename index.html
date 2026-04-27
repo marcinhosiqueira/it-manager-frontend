@@ -501,7 +501,6 @@
       <span class="icon">👥</span> Clientes
       <span class="nav-badge" id="badge-clientes">0</span>
     </button>
-    <div class="nav-label">Em breve</div>
     <button class="nav-item" onclick="showPage('ativos')">
       <span class="icon">🖥</span> Ativos
       <span class="nav-badge" id="badge-ativos">0</span>
@@ -510,10 +509,7 @@
       <span class="icon">🔑</span> Usuários
       <span class="nav-badge" id="badge-usuarios">0</span>
     </button>
-    <button class="nav-item" onclick="showPage('inventario')">
-      <span class="icon">📦</span> Inventário
-      <span class="nav-badge" id="badge-inventario">0</span>
-    </button>
+    <div class="nav-label">Em breve</div>
     <button class="nav-item" onclick="alert('Módulo de Anotações em desenvolvimento!')">
       <span class="icon">📝</span> Anotações
     </button>
@@ -522,6 +518,9 @@
     </button>
     <button class="nav-item" onclick="alert('Módulo de Antivírus em desenvolvimento!')">
       <span class="icon">🔒</span> Antivírus
+    </button>
+    <button class="nav-item" onclick="alert('Módulo de Relatórios em desenvolvimento!')">
+      <span class="icon">📊</span> Relatórios
     </button>
   </nav>
   <div class="sidebar-footer">
@@ -650,40 +649,71 @@
     <div class="page-header">
       <div>
         <div class="page-title">Ativos</div>
-        <div class="page-sub">PCs, servidores e equipamentos por cliente</div>
+        <div class="page-sub">Equipamentos, patrimônios e infraestrutura por cliente</div>
       </div>
       <button class="btn btn-primary" onclick="openAtivoModal()">+ Novo ativo</button>
     </div>
+
+    <!-- Cards de resumo por tipo -->
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px">
+      <div class="stat-card" style="cursor:pointer" onclick="filterAtivoTipo('Computador')">
+        <div class="stat-header"><div class="stat-label">Computadores</div><div class="stat-icon">🖥</div></div>
+        <div class="stat-value" id="ativo-count-computador">0</div>
+        <div class="stat-change neutral">cadastrados</div>
+      </div>
+      <div class="stat-card" style="cursor:pointer" onclick="filterAtivoTipo('Notebook')">
+        <div class="stat-header"><div class="stat-label">Notebooks</div><div class="stat-icon">💻</div></div>
+        <div class="stat-value" id="ativo-count-notebook">0</div>
+        <div class="stat-change neutral">cadastrados</div>
+      </div>
+      <div class="stat-card" style="cursor:pointer" onclick="filterAtivoTipo('Servidor')">
+        <div class="stat-header"><div class="stat-label">Servidores</div><div class="stat-icon">🗄</div></div>
+        <div class="stat-value" id="ativo-count-servidor">0</div>
+        <div class="stat-change neutral">cadastrados</div>
+      </div>
+      <div class="stat-card" style="cursor:pointer" onclick="filterAtivoTipo('')">
+        <div class="stat-header"><div class="stat-label">Total</div><div class="stat-icon">📦</div></div>
+        <div class="stat-value" id="ativo-count-total">0</div>
+        <div class="stat-change neutral">todos os tipos</div>
+      </div>
+    </div>
+
     <div class="ativos-toolbar">
       <div class="topbar-search" style="width:260px">
         <span style="color:var(--muted)">🔍</span>
-        <input type="text" id="ativo-search" placeholder="Buscar ativo..." oninput="renderAtivos()"/>
+        <input type="text" id="ativo-search" placeholder="Patrimônio, nome, modelo..." oninput="renderAtivos()"/>
       </div>
       <select class="select-filter" id="ativo-filter-cliente" onchange="renderAtivos()">
         <option value="">Todos os clientes</option>
       </select>
       <select class="select-filter" id="ativo-filter-tipo" onchange="renderAtivos()">
         <option value="">Todos os tipos</option>
-        <option value="PC">PC / Notebook</option>
+        <option value="Computador">Computador</option>
+        <option value="Notebook">Notebook</option>
         <option value="Servidor">Servidor</option>
+        <option value="Celular">Celular</option>
+        <option value="Tablet">Tablet</option>
         <option value="Switch">Switch / Roteador</option>
         <option value="Outro">Outro</option>
       </select>
       <select class="select-filter" id="ativo-filter-status" onchange="renderAtivos()">
         <option value="">Todos os status</option>
-        <option value="ativo">Ativo</option>
+        <option value="em_uso">Em uso</option>
+        <option value="disponivel">Disponível</option>
         <option value="manutencao">Manutenção</option>
         <option value="inativo">Inativo</option>
+        <option value="descartado">Descartado</option>
       </select>
     </div>
     <div class="ativos-table-wrap">
       <table>
         <thead><tr>
-          <th style="padding-left:20px">Equipamento</th>
+          <th style="padding-left:20px">Patrimônio</th>
+          <th>Equipamento</th>
           <th>Cliente</th>
           <th>Tipo</th>
+          <th>Usuário</th>
           <th>IP / Hostname</th>
-          <th>SO</th>
           <th>Status</th>
           <th></th>
         </tr></thead>
@@ -1087,45 +1117,92 @@
 </div>
 <div id="detail-overlay" onclick="closeDetailPanel()" style="display:none;position:fixed;inset:0;z-index:149;background:rgba(0,0,0,0.3);backdrop-filter:blur(2px)"></div>
 
-<!-- MODAL NOVO ATIVO -->
+<!-- MODAL NOVO ATIVO (unificado com inventário) -->
 <div class="modal-overlay" id="ativo-modal-overlay" onclick="closeAtivoModalOutside(event)">
-  <div class="modal" style="width:520px;max-width:96vw">
+  <div class="modal" style="width:580px;max-width:97vw;max-height:95vh;display:flex;flex-direction:column;">
     <div class="modal-header">
       <div class="modal-title" id="ativo-modal-title">Novo ativo</div>
       <button class="modal-close" onclick="closeAtivoModal()">×</button>
     </div>
-    <div class="modal-body">
+    <div class="modal-body-scroll">
+
+      <div class="modal-section-title">Tipo de equipamento</div>
+      <div class="inv-types-grid" id="ativo-type-grid">
+        <div class="inv-type-card" onclick="selectAtivoTipo('Computador', this)">
+          <div class="type-emoji">🖥</div><div class="type-name">Computador</div>
+        </div>
+        <div class="inv-type-card" onclick="selectAtivoTipo('Notebook', this)">
+          <div class="type-emoji">💻</div><div class="type-name">Notebook</div>
+        </div>
+        <div class="inv-type-card" onclick="selectAtivoTipo('Servidor', this)">
+          <div class="type-emoji">🗄</div><div class="type-name">Servidor</div>
+        </div>
+        <div class="inv-type-card" onclick="selectAtivoTipo('Celular', this)">
+          <div class="type-emoji">📱</div><div class="type-name">Celular</div>
+        </div>
+        <div class="inv-type-card" onclick="selectAtivoTipo('Tablet', this)">
+          <div class="type-emoji">⬛</div><div class="type-name">Tablet</div>
+        </div>
+        <div class="inv-type-card" onclick="selectAtivoTipo('Switch', this)">
+          <div class="type-emoji">🌐</div><div class="type-name">Switch</div>
+        </div>
+        <div class="inv-type-card" onclick="selectAtivoTipo('Impressora', this)">
+          <div class="type-emoji">🖨</div><div class="type-name">Impressora</div>
+        </div>
+        <div class="inv-type-card" onclick="selectAtivoTipo('Outro', this)">
+          <div class="type-emoji">📦</div><div class="type-name">Outro</div>
+        </div>
+      </div>
+      <input type="hidden" id="a-tipo"/>
+
+      <div class="modal-section-title" style="margin-top:4px">Identificação</div>
       <div class="form-row">
+        <div class="form-group">
+          <label>Número de patrimônio *</label>
+          <input type="text" id="a-patrimonio" placeholder="Ex: PAT-0001"/>
+        </div>
         <div class="form-group">
           <label>Nome do equipamento *</label>
           <input type="text" id="a-nome" placeholder="Ex: DESKTOP-001"/>
         </div>
-        <div class="form-group">
-          <label>Tipo *</label>
-          <select id="a-tipo">
-            <option value="">Selecionar...</option>
-            <option value="PC">PC / Notebook</option>
-            <option value="Servidor">Servidor</option>
-            <option value="Switch">Switch / Roteador</option>
-            <option value="Outro">Outro</option>
-          </select>
-        </div>
-      </div>
-      <div class="form-group">
-        <label>Cliente *</label>
-        <select id="a-cliente"><option value="">Selecionar cliente...</option></select>
       </div>
       <div class="form-row">
         <div class="form-group">
-          <label>Hostname</label>
-          <input type="text" id="a-hostname" placeholder="Ex: srv-principal"/>
+          <label>Marca</label>
+          <input type="text" id="a-marca" placeholder="Ex: Dell, Apple, HP"/>
         </div>
         <div class="form-group">
-          <label>Endereço IP</label>
-          <input type="text" id="a-ip" placeholder="Ex: 192.168.1.10"/>
+          <label>Modelo</label>
+          <input type="text" id="a-modelo" placeholder="Ex: OptiPlex 7090"/>
         </div>
       </div>
       <div class="form-row">
+        <div class="form-group">
+          <label>Número de série</label>
+          <input type="text" id="a-serial" placeholder="Ex: ABC123XYZ"/>
+        </div>
+        <div class="form-group">
+          <label>Data de aquisição</label>
+          <input type="text" id="a-aquisicao" placeholder="DD/MM/AAAA"/>
+        </div>
+      </div>
+
+      <div class="modal-section-title" style="margin-top:4px">Especificações técnicas</div>
+      <div class="form-row" id="a-specs-pc">
+        <div class="form-group">
+          <label>Processador</label>
+          <input type="text" id="a-cpu" placeholder="Ex: Intel Core i5-12400"/>
+        </div>
+        <div class="form-group">
+          <label>Memória RAM</label>
+          <input type="text" id="a-ram" placeholder="Ex: 16GB DDR4"/>
+        </div>
+      </div>
+      <div class="form-row" id="a-specs-pc2">
+        <div class="form-group">
+          <label>Armazenamento</label>
+          <input type="text" id="a-hd" placeholder="Ex: SSD 512GB"/>
+        </div>
         <div class="form-group">
           <label>Sistema Operacional</label>
           <select id="a-so">
@@ -1137,26 +1214,70 @@
             <option>Ubuntu 22.04</option>
             <option>Debian 12</option>
             <option>macOS Ventura</option>
+            <option>macOS Sonoma</option>
+            <option>Android</option>
+            <option>iOS</option>
+            <option>iPadOS</option>
             <option>Outro</option>
           </select>
         </div>
+      </div>
+      <div class="form-row" id="a-specs-mobile" style="display:none">
         <div class="form-group">
-          <label>Status</label>
-          <select id="a-status">
-            <option value="ativo">Ativo</option>
-            <option value="manutencao">Manutenção</option>
-            <option value="inativo">Inativo</option>
+          <label>IMEI</label>
+          <input type="text" id="a-imei" placeholder="Ex: 123456789012345"/>
+        </div>
+        <div class="form-group">
+          <label>Número do chip</label>
+          <input type="text" id="a-chip" placeholder="Ex: (21) 99999-0000"/>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Hostname</label>
+          <input type="text" id="a-hostname" placeholder="Ex: srv-principal"/>
+        </div>
+        <div class="form-group">
+          <label>Endereço IP</label>
+          <input type="text" id="a-ip" placeholder="Ex: 192.168.1.10"/>
+        </div>
+      </div>
+
+      <div class="modal-section-title" style="margin-top:4px">Vínculo</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Cliente *</label>
+          <select id="a-cliente" onchange="updateAtivoUsuarioSelect()">
+            <option value="">Selecionar cliente...</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Usuário responsável</label>
+          <select id="a-usuario">
+            <option value="">Nenhum / Disponível</option>
           </select>
         </div>
       </div>
       <div class="form-row">
         <div class="form-group">
-          <label>Marca / Modelo</label>
-          <input type="text" id="a-modelo" placeholder="Ex: Dell OptiPlex 7090"/>
+          <label>Localização</label>
+          <input type="text" id="a-local" placeholder="Ex: Sala 203, Filial SP"/>
         </div>
         <div class="form-group">
-          <label>Número de série</label>
-          <input type="text" id="a-serial" placeholder="Ex: ABC123XYZ"/>
+          <label>Garantia até</label>
+          <input type="text" id="a-garantia" placeholder="DD/MM/AAAA"/>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Status</label>
+          <select id="a-status">
+            <option value="em_uso">Em uso</option>
+            <option value="disponivel">Disponível</option>
+            <option value="manutencao">Manutenção</option>
+            <option value="inativo">Inativo</option>
+            <option value="descartado">Descartado</option>
+          </select>
         </div>
       </div>
       <div class="form-group">
@@ -1262,7 +1383,7 @@
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
     document.getElementById('page-' + id).classList.add('active');
-    const labels = { dashboard:'Dashboard', clientes:'Clientes', ativos:'Ativos', usuarios:'Usuários', inventario:'Inventário' };
+    const labels = { dashboard:'Dashboard', clientes:'Clientes', ativos:'Ativos', usuarios:'Usuários' };
     document.getElementById('topbar-title').textContent = labels[id] || id;
     const nav = [...document.querySelectorAll('.nav-item')].find(n => n.textContent.trim().toLowerCase().startsWith(id.substring(0,4)));
     if (nav) nav.classList.add('active');
@@ -1270,7 +1391,6 @@
     if (id === 'dashboard') renderDashboard();
     if (id === 'ativos') { populateClienteSelects(); renderAtivos(); }
     if (id === 'usuarios') { populateUserSelects(); renderUsuarios(); }
-    if (id === 'inventario') { populateInvSelects(); renderInventario(); }
   }
 
   function renderDashboard() {
@@ -1412,12 +1532,29 @@
     setTimeout(() => t.classList.remove('show'), 3000);
   }
 
-  // ── ATIVOS ──────────────────────────────────────────────
+  // ── ATIVOS (unificado com inventário) ───────────────────
   let ativos = [];
   let editingAtivoId = null;
+  let selectedAtivoTipo = '';
 
-  const TIPO_ICONS = { PC:'💻', Servidor:'🖥', Switch:'🌐', Outro:'📦' };
-  const TIPO_CLASS = { PC:'type-pc', Servidor:'type-server', Switch:'type-switch', Outro:'type-other' };
+  const ATIVO_EMOJI = { Computador:'🖥', Notebook:'💻', Servidor:'🗄', Celular:'📱', Tablet:'⬛', Switch:'🌐', Impressora:'🖨', Outro:'📦' };
+  const ATIVO_STATUS_BADGE = { em_uso:'badge-green', disponivel:'badge-blue', manutencao:'badge-amber', inativo:'badge-red', descartado:'badge-red', ativo:'badge-green' };
+  const ATIVO_STATUS_LABEL = { em_uso:'Em uso', disponivel:'Disponível', manutencao:'Manutenção', inativo:'Inativo', descartado:'Descartado', ativo:'Ativo' };
+
+  function selectAtivoTipo(tipo, el) {
+    selectedAtivoTipo = tipo;
+    document.getElementById('a-tipo').value = tipo;
+    document.querySelectorAll('#ativo-type-grid .inv-type-card').forEach(c => c.classList.remove('selected'));
+    el.classList.add('selected');
+    const isMobile = tipo === 'Celular' || tipo === 'Tablet';
+    document.getElementById('a-specs-mobile').style.display = isMobile ? 'grid' : 'none';
+    document.getElementById('a-specs-pc').style.display = isMobile ? 'none' : 'grid';
+  }
+
+  function filterAtivoTipo(tipo) {
+    const sel = document.getElementById('ativo-filter-tipo');
+    if (sel) { sel.value = tipo; renderAtivos(); }
+  }
 
   function populateClienteSelects() {
     const opts = clients.map(c => `<option value="${c.id}">${c.nome}</option>`).join('');
@@ -1432,7 +1569,23 @@
     return c ? c.nome : '—';
   }
 
+  function updateAtivoUsuarioSelect() {
+    const clienteId = document.getElementById('a-cliente')?.value || '';
+    const sel = document.getElementById('a-usuario');
+    if (!sel) return;
+    const list = clienteId ? usuarios.filter(u => String(u.clienteId) === clienteId) : usuarios;
+    sel.innerHTML = '<option value="">Nenhum / Disponível</option>'
+      + list.map(u => `<option value="${u.id}">${u.nome}${u.setor ? ' — ' + u.setor : ''}</option>`).join('');
+  }
+
   function renderAtivos() {
+    ['Computador','Notebook','Servidor'].forEach(t => {
+      const el = document.getElementById('ativo-count-' + t.toLowerCase());
+      if (el) el.textContent = ativos.filter(a => a.tipo === t).length;
+    });
+    const total = document.getElementById('ativo-count-total');
+    if (total) total.textContent = ativos.length;
+
     const tbody = document.getElementById('ativos-tbody');
     if (!tbody) return;
     const search = (document.getElementById('ativo-search')?.value || '').toLowerCase();
@@ -1441,8 +1594,12 @@
     const fs = document.getElementById('ativo-filter-status')?.value || '';
 
     let list = ativos.filter(a => {
-      const nm = clienteNome(a.clienteId);
-      if (search && !a.nome.toLowerCase().includes(search) && !nm.toLowerCase().includes(search) && !(a.ip||'').includes(search) && !(a.hostname||'').toLowerCase().includes(search)) return false;
+      if (search && !(a.nome||'').toLowerCase().includes(search)
+        && !(a.patrimonio||'').toLowerCase().includes(search)
+        && !(a.marca||'').toLowerCase().includes(search)
+        && !(a.modelo||'').toLowerCase().includes(search)
+        && !(a.ip||'').includes(search)
+        && !(a.hostname||'').toLowerCase().includes(search)) return false;
       if (fc && String(a.clienteId) !== fc) return false;
       if (ft && a.tipo !== ft) return false;
       if (fs && a.status !== fs) return false;
@@ -1450,36 +1607,37 @@
     });
 
     if (!list.length) {
-      tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:40px">
-        ${ativos.length ? 'Nenhum resultado para os filtros aplicados.' : 'Nenhum ativo cadastrado ainda. Clique em <strong>+ Novo ativo</strong>.'}
+      tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:40px">
+        ${ativos.length ? 'Nenhum resultado para os filtros.' : 'Nenhum ativo cadastrado. Clique em <strong>+ Novo ativo</strong>.'}
       </td></tr>`;
       return;
     }
 
     tbody.innerHTML = list.map(a => {
-      const statusBadge = a.status === 'ativo'
-        ? '<span class="badge badge-green badge-dot">Ativo</span>'
-        : a.status === 'manutencao'
-        ? '<span class="badge badge-amber badge-dot">Manutenção</span>'
-        : '<span class="badge badge-red badge-dot">Inativo</span>';
+      const usuario = a.usuarioId ? usuarios.find(u => String(u.id) === String(a.usuarioId)) : null;
       return `<tr>
-        <td style="padding-left:20px">
-          <div style="display:flex;align-items:center;gap:10px">
-            <div class="ativo-type-icon ${TIPO_CLASS[a.tipo]||'type-other'}">${TIPO_ICONS[a.tipo]||'📦'}</div>
+        <td style="padding-left:20px"><span class="patrimonio-badge">${a.patrimonio||'—'}</span></td>
+        <td>
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="font-size:18px">${ATIVO_EMOJI[a.tipo]||'📦'}</span>
             <div>
               <div style="font-weight:500;font-size:13px">${a.nome}</div>
-              <div style="color:var(--muted);font-size:11px;font-family:var(--mono)">${a.modelo||''}</div>
+              <div style="color:var(--muted);font-size:11px">${[a.marca,a.modelo].filter(Boolean).join(' ')||''}</div>
             </div>
           </div>
         </td>
         <td style="font-size:13px">${clienteNome(a.clienteId)}</td>
         <td><span class="badge badge-blue">${a.tipo||'—'}</span></td>
+        <td>${usuario
+          ? `<div style="display:flex;align-items:center;gap:8px">
+              <div class="user-avatar" style="background:${getColor(usuario.nome)};width:26px;height:26px;font-size:10px">${getInitials(usuario.nome)}</div>
+              <div style="font-size:13px">${usuario.nome}</div></div>`
+          : '<span style="color:var(--muted);font-size:12px">—</span>'}</td>
         <td style="font-family:var(--mono);font-size:12px;color:var(--muted)">${[a.ip,a.hostname].filter(Boolean).join(' / ')||'—'}</td>
-        <td style="font-size:12.5px;color:var(--muted)">${a.so||'—'}</td>
-        <td>${statusBadge}</td>
+        <td><span class="badge ${ATIVO_STATUS_BADGE[a.status]||'badge-green'} badge-dot">${ATIVO_STATUS_LABEL[a.status]||a.status}</span></td>
         <td>
-          <button class="action-btn" title="Editar" onclick="editAtivo(${a.id})">✏️</button>
-          <button class="action-btn" title="Excluir" onclick="deleteAtivo(${a.id})">🗑️</button>
+          <button class="action-btn" onclick="editAtivo(${a.id})">✏️</button>
+          <button class="action-btn" onclick="deleteAtivo(${a.id})">🗑️</button>
         </td>
       </tr>`;
     }).join('');
@@ -1488,31 +1646,52 @@
   function openAtivoModal(id) {
     populateClienteSelects();
     editingAtivoId = id || null;
+    selectedAtivoTipo = '';
     document.getElementById('ativo-modal-title').textContent = id ? 'Editar ativo' : 'Novo ativo';
     document.getElementById('ativo-save-btn').textContent = id ? 'Salvar alterações' : 'Salvar ativo';
+    document.querySelectorAll('#ativo-type-grid .inv-type-card').forEach(c => c.classList.remove('selected'));
+    ['a-nome','a-patrimonio','a-marca','a-modelo','a-serial','a-aquisicao',
+     'a-cpu','a-ram','a-hd','a-hostname','a-ip','a-imei','a-chip','a-local','a-garantia','a-obs']
+      .forEach(f => { const el = document.getElementById(f); if(el) el.value=''; });
+    document.getElementById('a-tipo').value='';
+    document.getElementById('a-so').value='';
+    document.getElementById('a-status').value='em_uso';
+    document.getElementById('a-cliente').value='';
+    document.getElementById('a-specs-mobile').style.display='none';
+    document.getElementById('a-specs-pc').style.display='grid';
+
     if (id) {
       const a = ativos.find(x => x.id === id);
       if (a) {
-        document.getElementById('a-nome').value = a.nome||'';
+        selectedAtivoTipo = a.tipo||'';
         document.getElementById('a-tipo').value = a.tipo||'';
-        document.getElementById('a-cliente').value = a.clienteId||'';
-        document.getElementById('a-hostname').value = a.hostname||'';
-        document.getElementById('a-ip').value = a.ip||'';
-        document.getElementById('a-so').value = a.so||'';
-        document.getElementById('a-status').value = a.status||'ativo';
+        const card = [...document.querySelectorAll('#ativo-type-grid .inv-type-card')]
+          .find(c => c.querySelector('.type-name')?.textContent === a.tipo);
+        if (card) { card.classList.add('selected'); selectAtivoTipo(a.tipo, card); }
+        document.getElementById('a-nome').value = a.nome||'';
+        document.getElementById('a-patrimonio').value = a.patrimonio||'';
+        document.getElementById('a-marca').value = a.marca||'';
         document.getElementById('a-modelo').value = a.modelo||'';
         document.getElementById('a-serial').value = a.serial||'';
+        document.getElementById('a-aquisicao').value = a.aquisicao||'';
+        document.getElementById('a-cpu').value = a.cpu||'';
+        document.getElementById('a-ram').value = a.ram||'';
+        document.getElementById('a-hd').value = a.hd||'';
+        document.getElementById('a-so').value = a.so||'';
+        document.getElementById('a-imei').value = a.imei||'';
+        document.getElementById('a-chip').value = a.chip||'';
+        document.getElementById('a-hostname').value = a.hostname||'';
+        document.getElementById('a-ip').value = a.ip||'';
+        document.getElementById('a-status').value = a.status||'em_uso';
+        document.getElementById('a-cliente').value = a.clienteId||'';
+        updateAtivoUsuarioSelect();
+        document.getElementById('a-usuario').value = a.usuarioId||'';
+        document.getElementById('a-local').value = a.local||'';
+        document.getElementById('a-garantia').value = a.garantia||'';
         document.getElementById('a-obs').value = a.obs||'';
       }
-    } else {
-      ['a-nome','a-hostname','a-ip','a-modelo','a-serial','a-obs'].forEach(id => document.getElementById(id).value='');
-      document.getElementById('a-tipo').value='';
-      document.getElementById('a-cliente').value='';
-      document.getElementById('a-so').value='';
-      document.getElementById('a-status').value='ativo';
     }
     document.getElementById('ativo-modal-overlay').classList.add('open');
-    document.getElementById('a-nome').focus();
   }
 
   function closeAtivoModal() {
@@ -1521,66 +1700,13 @@
   }
   function closeAtivoModalOutside(e) { if (e.target === document.getElementById('ativo-modal-overlay')) closeAtivoModal(); }
 
-  function saveAtivo() {
-    const nome = document.getElementById('a-nome').value.trim();
-    const tipo = document.getElementById('a-tipo').value;
-    const clienteId = document.getElementById('a-cliente').value;
-    if (!nome) { document.getElementById('a-nome').focus(); showToast('⚠️ Informe o nome do equipamento.'); return; }
-    if (!tipo) { document.getElementById('a-tipo').focus(); showToast('⚠️ Selecione o tipo.'); return; }
-    if (!clienteId) { document.getElementById('a-cliente').focus(); showToast('⚠️ Selecione o cliente.'); return; }
-
-    const ativo = {
-      id: editingAtivoId || Date.now(),
-      nome, tipo, clienteId,
-      hostname: document.getElementById('a-hostname').value.trim(),
-      ip: document.getElementById('a-ip').value.trim(),
-      so: document.getElementById('a-so').value,
-      status: document.getElementById('a-status').value,
-      modelo: document.getElementById('a-modelo').value.trim(),
-      serial: document.getElementById('a-serial').value.trim(),
-      obs: document.getElementById('a-obs').value.trim(),
-    };
-
-    if (editingAtivoId) {
-      ativos = ativos.map(a => a.id === editingAtivoId ? ativo : a);
-      addActivity(`Ativo <strong>${nome}</strong> atualizado`, '#4f8ef7');
-      showToast('✅ Ativo atualizado!');
-    } else {
-      ativos.push(ativo);
-      addActivity(`Ativo <strong>${nome}</strong> cadastrado (${clienteNome(clienteId)})`, '#7c3aed');
-      showToast('✅ Ativo salvo com sucesso!');
-    }
-
-    localStorage.setItem('itm_ativos', JSON.stringify(ativos));
-    closeAtivoModal();
-    renderAtivos();
-    updateAtivosBadge();
-    renderDashboard();
-  }
-
   function editAtivo(id) { openAtivoModal(id); }
-
-  function deleteAtivo(id) {
-    const a = ativos.find(x => x.id === id);
-    if (!a) return;
-    if (!confirm(`Excluir o ativo "${a.nome}"?`)) return;
-    ativos = ativos.filter(x => x.id !== id);
-    localStorage.setItem('itm_ativos', JSON.stringify(ativos));
-    addActivity(`Ativo <strong>${a.nome}</strong> removido`, '#f4566a');
-    renderAtivos();
-    updateAtivosBadge();
-    renderDashboard();
-    showToast('🗑️ Ativo removido.');
-  }
 
   function updateAtivosBadge() {
     const el = document.getElementById('badge-ativos');
     if (el) el.textContent = ativos.length;
   }
-  // ── INVENTÁRIO ────────────────────────────────────────────
-  let inventario = [];
-  let editingInvId = null;
-  let selectedInvTipo = '';
+  // ── FIM ATIVOS ───────────────────────────────────────────
 
   const INV_EMOJI = { Computador:'🖥', Notebook:'💻', Celular:'📱', Tablet:'⬛' };
   const INV_STATUS_BADGE = {
@@ -2112,36 +2238,20 @@
   let TOKEN = '';
 
   async function api(method, path, body) {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 15000);
-    try {
-      const opts = {
-        method,
-        mode: 'cors',
-        signal: controller.signal,
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          ...(TOKEN ? { Authorization: 'Bearer ' + TOKEN } : {})
-        }
-      };
-      if (body) opts.body = JSON.stringify(body);
-      const res = await fetch(API + path, opts);
-      clearTimeout(timeout);
-      if (res.status === 401) { logout(); return null; }
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        showToast('❌ ' + (err.detail || 'Erro na requisição'));
-        return null;
-      }
-      if (res.status === 204) return true;
-      return res.json();
-    } catch (e) {
-      clearTimeout(timeout);
-      if (e.name === 'AbortError') showToast('❌ Tempo esgotado. Verifique sua conexão.');
-      else showToast('❌ Erro de conexão com o servidor.');
+    const opts = {
+      method,
+      headers: { 'Content-Type': 'application/json', ...(TOKEN ? { Authorization: 'Bearer ' + TOKEN } : {}) }
+    };
+    if (body) opts.body = JSON.stringify(body);
+    const res = await fetch(API + path, opts);
+    if (res.status === 401) { logout(); return null; }
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      showToast('❌ ' + (err.detail || 'Erro na requisição'));
       return null;
     }
+    if (res.status === 204) return true;
+    return res.json();
   }
 
   // ── AUTENTICAÇÃO ──────────────────────────────────────────
@@ -2149,50 +2259,36 @@
     const user = document.getElementById('login-user').value.trim();
     const pass = document.getElementById('login-pass').value;
     const err  = document.getElementById('login-error');
-    const errMsg = document.getElementById('login-error');
     if (!user || !pass) { err.classList.add('show'); return; }
 
     const btn = document.querySelector('.login-btn');
     btn.textContent = 'Entrando...'; btn.disabled = true;
 
-    try {
-      const form = new URLSearchParams();
-      form.append('username', user);
-      form.append('password', pass);
+    const form = new URLSearchParams();
+    form.append('username', user);
+    form.append('password', pass);
 
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 15000);
+    const res = await fetch(API + '/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: form
+    });
 
-      const res = await fetch(API + '/auth/login', {
-        method: 'POST',
-        mode: 'cors',
-        signal: controller.signal,
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'Accept': 'application/json' },
-        body: form
-      });
-      clearTimeout(timeout);
+    btn.textContent = 'Entrar no sistema'; btn.disabled = false;
 
-      if (!res.ok) {
-        err.classList.add('show');
-        document.getElementById('login-pass').value = '';
-        document.getElementById('login-pass').focus();
-        btn.textContent = 'Entrar no sistema'; btn.disabled = false;
-        return;
-      }
-
-      const data = await res.json();
-      TOKEN = data.access_token;
-      sessionStorage.setItem('itm_token', TOKEN);
-      sessionStorage.setItem('itm_token_exp', Date.now() + 8 * 60 * 60 * 1000);
-      err.classList.remove('show');
-      btn.textContent = 'Entrar no sistema'; btn.disabled = false;
-      showApp();
-    } catch (e) {
-      btn.textContent = 'Entrar no sistema'; btn.disabled = false;
+    if (!res.ok) {
       err.classList.add('show');
-      document.getElementById('login-error').querySelector('span').textContent = '⚠️';
-      errMsg.innerHTML = '<span>⚠️</span> Não foi possível conectar ao servidor.';
+      document.getElementById('login-pass').value = '';
+      document.getElementById('login-pass').focus();
+      return;
     }
+
+    const data = await res.json();
+    TOKEN = data.access_token;
+    sessionStorage.setItem('itm_token', TOKEN);
+    sessionStorage.setItem('itm_token_exp', Date.now() + 8 * 60 * 60 * 1000);
+    err.classList.remove('show');
+    showApp();
   }
 
   function togglePass() {
@@ -2222,20 +2318,22 @@
   }
 
   // ── CARREGAMENTO INICIAL ──────────────────────────────────
+  function mapAtivo(a) {
+    return { ...a, clienteId: a.cliente_id, usuarioId: a.usuario_id };
+  }
+
   async function loadAll() {
     showToast('⏳ Carregando dados...');
-    const [c, a, u, i] = await Promise.all([
+    const [c, a, u] = await Promise.all([
       api('GET', '/clientes'),
       api('GET', '/ativos'),
       api('GET', '/usuarios'),
-      api('GET', '/inventario'),
     ]);
-    if (c) clients    = c.map(x => ({ ...x, id: x.id }));
-    if (a) ativos     = a.map(x => ({ ...x, clienteId: x.cliente_id, patrimonioId: x.patrimonio_id }));
-    if (u) usuarios   = u.map(mapUser);
-    if (i) inventario = i.map(x => ({ ...x, clienteId: x.cliente_id, usuarioId: x.usuario_id }));
+    if (c) clients  = c;
+    if (a) ativos   = a.map(mapAtivo);
+    if (u) usuarios = u.map(mapUser);
     renderDashboard();
-    updateBadge(); updateAtivosBadge(); updateUsuariosBadge(); updateInvBadge();
+    updateBadge(); updateAtivosBadge(); updateUsuariosBadge();
     showToast('✅ Dados carregados!');
   }
 
@@ -2270,31 +2368,42 @@
   };
 
   // ── ATIVOS (API) ──────────────────────────────────────────
-  const _saveAtivoOrig = saveAtivo;
   saveAtivo = async function() {
     const nome = document.getElementById('a-nome').value.trim();
     const tipo = document.getElementById('a-tipo').value;
     const clienteId = document.getElementById('a-cliente').value;
-    if (!nome) { document.getElementById('a-nome').focus(); showToast('⚠️ Informe o nome.'); return; }
+    if (!nome) { showToast('⚠️ Informe o nome.'); return; }
     if (!tipo) { showToast('⚠️ Selecione o tipo.'); return; }
     if (!clienteId) { showToast('⚠️ Selecione o cliente.'); return; }
+    const usuarioId = document.getElementById('a-usuario')?.value;
     const body = {
       nome, tipo, cliente_id: parseInt(clienteId),
-      hostname: document.getElementById('a-hostname').value.trim(),
-      ip: document.getElementById('a-ip').value.trim(),
-      so: document.getElementById('a-so').value,
-      status: document.getElementById('a-status').value,
+      patrimonio: document.getElementById('a-patrimonio').value.trim(),
+      marca: document.getElementById('a-marca').value.trim(),
       modelo: document.getElementById('a-modelo').value.trim(),
       serial: document.getElementById('a-serial').value.trim(),
+      aquisicao: document.getElementById('a-aquisicao').value.trim(),
+      cpu: document.getElementById('a-cpu').value.trim(),
+      ram: document.getElementById('a-ram').value.trim(),
+      hd: document.getElementById('a-hd').value.trim(),
+      so: document.getElementById('a-so').value,
+      imei: document.getElementById('a-imei').value.trim(),
+      chip: document.getElementById('a-chip').value.trim(),
+      hostname: document.getElementById('a-hostname').value.trim(),
+      ip: document.getElementById('a-ip').value.trim(),
+      status: document.getElementById('a-status').value,
+      usuario_id: usuarioId ? parseInt(usuarioId) : null,
+      local: document.getElementById('a-local').value.trim(),
+      garantia: document.getElementById('a-garantia').value.trim(),
       obs: document.getElementById('a-obs').value.trim(),
     };
     let result;
     if (editingAtivoId) {
       result = await api('PUT', '/ativos/' + editingAtivoId, body);
-      if (result) { ativos = ativos.map(a => a.id === editingAtivoId ? { ...result, clienteId: result.cliente_id } : a); showToast('✅ Ativo atualizado!'); }
+      if (result) { ativos = ativos.map(a => a.id === editingAtivoId ? mapAtivo(result) : a); showToast('✅ Ativo atualizado!'); }
     } else {
       result = await api('POST', '/ativos', body);
-      if (result) { ativos.push({ ...result, clienteId: result.cliente_id }); showToast('✅ Ativo salvo!'); }
+      if (result) { ativos.push(mapAtivo(result)); showToast('✅ Ativo salvo!'); }
     }
     if (result) { closeAtivoModal(); renderAtivos(); updateAtivosBadge(); renderDashboard(); }
   };
