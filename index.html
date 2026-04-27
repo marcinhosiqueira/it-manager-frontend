@@ -509,16 +509,17 @@
       <span class="icon">🔑</span> Usuários
       <span class="nav-badge" id="badge-usuarios">0</span>
     </button>
-    <div class="nav-label">Em breve</div>
-    <button class="nav-item" onclick="alert('Módulo de Anotações em desenvolvimento!')">
-      <span class="icon">📝</span> Anotações
-    </button>
     <button class="nav-item" onclick="showPage('permissoes')">
       <span class="icon">🛡</span> Permissões
       <span class="nav-badge" id="badge-permissoes">0</span>
     </button>
-    <button class="nav-item" onclick="alert('Módulo de Antivírus em desenvolvimento!')">
+    <button class="nav-item" onclick="showPage('antivirus')">
       <span class="icon">🔒</span> Antivírus
+      <span class="nav-badge" id="badge-antivirus">0</span>
+    </button>
+    <div class="nav-label">Em breve</div>
+    <button class="nav-item" onclick="alert('Módulo de Anotações em desenvolvimento!')">
+      <span class="icon">📝</span> Anotações
     </button>
     <button class="nav-item" onclick="alert('Módulo de Relatórios em desenvolvimento!')">
       <span class="icon">📊</span> Relatórios
@@ -915,7 +916,190 @@
     </div>
   </div>
 
+  <!-- ANTIVÍRUS PAGE -->
+  <div class="content page" id="page-antivirus">
+    <div class="page-header">
+      <div>
+        <div class="page-title">Antivírus</div>
+        <div class="page-sub">Controle de antivírus por colaborador e cliente</div>
+      </div>
+      <button class="btn btn-primary" onclick="openAvModal()">+ Novo registro</button>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px">
+      <div class="stat-card">
+        <div class="stat-header"><div class="stat-label">Total</div><div class="stat-icon">🔒</div></div>
+        <div class="stat-value" id="av-count-total">0</div>
+        <div class="stat-change neutral">registros</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-header"><div class="stat-label">Instalados</div><div class="stat-icon">✅</div></div>
+        <div class="stat-value" id="av-count-instalado">0</div>
+        <div class="stat-change neutral">com antivírus</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-header"><div class="stat-label">Não instalados</div><div class="stat-icon">⚠️</div></div>
+        <div class="stat-value" id="av-count-nao">0</div>
+        <div class="stat-change neutral">sem antivírus</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-header"><div class="stat-label">Expirados</div><div class="stat-icon">🚨</div></div>
+        <div class="stat-value" id="av-count-expirado">0</div>
+        <div class="stat-change neutral">licenças vencidas</div>
+      </div>
+    </div>
+
+    <div class="ativos-toolbar">
+      <div class="topbar-search" style="width:260px">
+        <span style="color:var(--muted)">🔍</span>
+        <input type="text" id="av-search" placeholder="Usuário, antivírus, cliente..." oninput="renderAntivirus()"/>
+      </div>
+      <select class="select-filter" id="av-filter-cliente" onchange="renderAntivirus()">
+        <option value="">Todos os clientes</option>
+      </select>
+      <select class="select-filter" id="av-filter-status" onchange="renderAntivirus()">
+        <option value="">Todos os status</option>
+        <option value="instalado">Instalado</option>
+        <option value="nao_instalado">Não instalado</option>
+        <option value="expirado">Expirado</option>
+        <option value="desinstalado">Desinstalado</option>
+      </select>
+    </div>
+
+    <div class="ativos-table-wrap">
+      <table>
+        <thead><tr>
+          <th style="padding-left:20px">Colaborador</th>
+          <th>Cliente</th>
+          <th>Antivírus</th>
+          <th>Versão / Licença</th>
+          <th>Data instalação</th>
+          <th>Instalado por</th>
+          <th>Status</th>
+          <th></th>
+        </tr></thead>
+        <tbody id="av-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
 </div><!-- end .main -->
+
+<!-- MODAL ANTIVÍRUS -->
+<div class="modal-overlay" id="av-modal-overlay" onclick="closeAvModalOutside(event)">
+  <div class="modal" style="width:560px;max-width:97vw;max-height:95vh;display:flex;flex-direction:column;">
+    <div class="modal-header">
+      <div class="modal-title" id="av-modal-title">Novo registro de antivírus</div>
+      <button class="modal-close" onclick="closeAvModal()">×</button>
+    </div>
+    <div class="modal-body-scroll">
+
+      <div class="modal-section-title">Vínculo</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Cliente *</label>
+          <select id="av-cliente" onchange="updateAvUsuarioSelect()">
+            <option value="">Selecionar cliente...</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Colaborador *</label>
+          <select id="av-usuario">
+            <option value="">Selecionar colaborador...</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Ativo / Equipamento vinculado</label>
+        <select id="av-ativo">
+          <option value="">Nenhum</option>
+        </select>
+      </div>
+
+      <div class="modal-section-title" style="margin-top:4px">Antivírus</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Nome do antivírus *</label>
+          <select id="av-nome">
+            <option value="">Selecionar...</option>
+            <option>Kaspersky</option>
+            <option>Norton</option>
+            <option>McAfee</option>
+            <option>Bitdefender</option>
+            <option>Avast</option>
+            <option>AVG</option>
+            <option>ESET NOD32</option>
+            <option>Malwarebytes</option>
+            <option>Windows Defender</option>
+            <option>Trend Micro</option>
+            <option>Sophos</option>
+            <option>Outro</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Nome personalizado (se Outro)</label>
+          <input type="text" id="av-nome-custom" placeholder="Ex: CrowdStrike Falcon"/>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Versão</label>
+          <input type="text" id="av-versao" placeholder="Ex: 21.3.0"/>
+        </div>
+        <div class="form-group">
+          <label>Número de licença</label>
+          <input type="text" id="av-licenca" placeholder="Ex: XXXX-XXXX-XXXX"/>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Validade da licença</label>
+          <input type="text" id="av-validade" placeholder="DD/MM/AAAA"/>
+        </div>
+        <div class="form-group">
+          <label>Status *</label>
+          <select id="av-status">
+            <option value="instalado">✅ Instalado</option>
+            <option value="nao_instalado">⚠️ Não instalado</option>
+            <option value="expirado">🚨 Expirado</option>
+            <option value="desinstalado">❌ Desinstalado</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="modal-section-title" style="margin-top:4px">Instalação</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Data de instalação</label>
+          <input type="text" id="av-data-inst" placeholder="DD/MM/AAAA"/>
+        </div>
+        <div class="form-group">
+          <label>Instalado por</label>
+          <input type="text" id="av-instalador" placeholder="Ex: João TI / Você mesmo"/>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Última atualização</label>
+          <input type="text" id="av-ultima-atualizacao" placeholder="DD/MM/AAAA"/>
+        </div>
+        <div class="form-group">
+          <label>Última varredura</label>
+          <input type="text" id="av-ultima-varredura" placeholder="DD/MM/AAAA"/>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Observações</label>
+        <textarea id="av-obs" placeholder="Informações adicionais sobre a instalação ou licença..."></textarea>
+      </div>
+
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeAvModal()">Cancelar</button>
+      <button class="btn btn-primary" id="av-save-btn" onclick="saveAv()">Salvar registro</button>
+    </div>
+  </div>
+</div>
 
 <!-- MODAL PERMISSÕES -->
 <div class="modal-overlay" id="perm-modal-overlay" onclick="closePermModalOutside(event)">
@@ -1595,7 +1779,7 @@
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
     document.getElementById('page-' + id).classList.add('active');
-    const labels = { dashboard:'Dashboard', clientes:'Clientes', ativos:'Ativos', usuarios:'Usuários', permissoes:'Permissões' };
+    const labels = { dashboard:'Dashboard', clientes:'Clientes', ativos:'Ativos', usuarios:'Usuários', permissoes:'Permissões', antivirus:'Antivírus' };
     document.getElementById('topbar-title').textContent = labels[id] || id;
     const nav = [...document.querySelectorAll('.nav-item')].find(n => n.textContent.trim().toLowerCase().startsWith(id.substring(0,4)));
     if (nav) nav.classList.add('active');
@@ -1604,6 +1788,7 @@
     if (id === 'ativos') { populateClienteSelects(); renderAtivos(); }
     if (id === 'usuarios') { populateUserSelects(); renderUsuarios(); }
     if (id === 'permissoes') { populatePermSelects(); renderPermissoes(); }
+    if (id === 'antivirus') { populateAvSelects(); renderAntivirus(); }
   }
 
   function renderDashboard() {
@@ -1920,6 +2105,196 @@
     if (el) el.textContent = ativos.length;
   }
   // ── FIM ATIVOS ───────────────────────────────────────────
+
+  // ── ANTIVÍRUS ─────────────────────────────────────────────
+  let antivirus = [];
+  let editingAvId = null;
+
+  const AV_STATUS_BADGE = {
+    instalado: 'badge-green', nao_instalado: 'badge-amber',
+    expirado: 'badge-red', desinstalado: 'badge-red'
+  };
+  const AV_STATUS_LABEL = {
+    instalado: '✅ Instalado', nao_instalado: '⚠️ Não instalado',
+    expirado: '🚨 Expirado', desinstalado: '❌ Desinstalado'
+  };
+
+  function populateAvSelects() {
+    const opts = clients.map(c => `<option value="${c.id}">${c.nome}</option>`).join('');
+    const fc = document.getElementById('av-filter-cliente');
+    const ac = document.getElementById('av-cliente');
+    if (fc) fc.innerHTML = '<option value="">Todos os clientes</option>' + opts;
+    if (ac) ac.innerHTML = '<option value="">Selecionar cliente...</option>' + opts;
+    updateAvUsuarioSelect();
+  }
+
+  function updateAvUsuarioSelect() {
+    const clienteId = document.getElementById('av-cliente')?.value || '';
+    const sel = document.getElementById('av-usuario');
+    const selAtivo = document.getElementById('av-ativo');
+    if (!sel) return;
+    const listU = clienteId ? usuarios.filter(u => String(u.clienteId) === clienteId) : usuarios;
+    sel.innerHTML = '<option value="">Selecionar colaborador...</option>'
+      + listU.map(u => `<option value="${u.id}">${u.nome}${u.setor ? ' — ' + u.setor : ''}</option>`).join('');
+    const listA = clienteId ? ativos.filter(a => String(a.clienteId) === clienteId) : ativos;
+    if (selAtivo) selAtivo.innerHTML = '<option value="">Nenhum</option>'
+      + listA.map(a => `<option value="${a.id}">${a.patrimonio ? a.patrimonio + ' — ' : ''}${a.nome}</option>`).join('');
+  }
+
+  function renderAntivirus() {
+    const total   = document.getElementById('av-count-total');
+    const inst    = document.getElementById('av-count-instalado');
+    const nao     = document.getElementById('av-count-nao');
+    const exp     = document.getElementById('av-count-expirado');
+    if (total) total.textContent = antivirus.length;
+    if (inst)  inst.textContent  = antivirus.filter(a => a.status === 'instalado').length;
+    if (nao)   nao.textContent   = antivirus.filter(a => a.status === 'nao_instalado').length;
+    if (exp)   exp.textContent   = antivirus.filter(a => a.status === 'expirado').length;
+
+    const tbody = document.getElementById('av-tbody');
+    if (!tbody) return;
+    const search = (document.getElementById('av-search')?.value || '').toLowerCase();
+    const fc = document.getElementById('av-filter-cliente')?.value || '';
+    const fs = document.getElementById('av-filter-status')?.value || '';
+
+    let list = antivirus.filter(a => {
+      const un = usuarioNome(a.usuarioId).toLowerCase();
+      const an = (a.nomeCustom || a.nome || '').toLowerCase();
+      if (search && !un.includes(search) && !an.includes(search)
+        && !clienteNome(a.clienteId).toLowerCase().includes(search)) return false;
+      if (fc && String(a.clienteId) !== fc) return false;
+      if (fs && a.status !== fs) return false;
+      return true;
+    });
+
+    if (!list.length) {
+      tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:40px">
+        ${antivirus.length ? 'Nenhum resultado para os filtros.' : 'Nenhum registro cadastrado. Clique em <strong>+ Novo registro</strong>.'}
+      </td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = list.map(a => {
+      const u = usuarios.find(u => String(u.id) === String(a.usuarioId));
+      const cor = u ? getColor(u.nome) : '#7b8099';
+      const ini = u ? getInitials(u.nome) : '??';
+      const avNome = a.nome === 'Outro' ? (a.nomeCustom || 'Outro') : (a.nome || '—');
+      return `<tr>
+        <td style="padding-left:20px">
+          <div style="display:flex;align-items:center;gap:10px">
+            <div class="user-avatar" style="background:${cor};width:32px;height:32px;font-size:12px">${ini}</div>
+            <div>
+              <div style="font-weight:500;font-size:13px">${u ? u.nome : '—'}</div>
+              <div style="color:var(--muted);font-size:11px">${u ? u.setor||'' : ''}</div>
+            </div>
+          </div>
+        </td>
+        <td style="font-size:13px">${clienteNome(a.clienteId)}</td>
+        <td style="font-size:13px;font-weight:500">${avNome}</td>
+        <td style="font-size:12px;color:var(--muted);font-family:var(--mono)">${[a.versao, a.licenca].filter(Boolean).join(' · ')||'—'}</td>
+        <td style="font-size:13px;color:var(--muted)">${a.dataInst||'—'}</td>
+        <td style="font-size:13px;color:var(--muted)">${a.instalador||'—'}</td>
+        <td><span class="badge ${AV_STATUS_BADGE[a.status]||'badge-blue'} badge-dot">${AV_STATUS_LABEL[a.status]||a.status}</span></td>
+        <td>
+          <button class="action-btn" onclick="openAvModal(${a.id})">✏️</button>
+          <button class="action-btn" onclick="deleteAv(${a.id})">🗑️</button>
+        </td>
+      </tr>`;
+    }).join('');
+  }
+
+  function openAvModal(id) {
+    populateAvSelects();
+    editingAvId = id || null;
+    document.getElementById('av-modal-title').textContent = id ? 'Editar registro' : 'Novo registro de antivírus';
+    document.getElementById('av-save-btn').textContent = id ? 'Salvar alterações' : 'Salvar registro';
+    ['av-nome-custom','av-versao','av-licenca','av-validade','av-data-inst',
+     'av-instalador','av-ultima-atualizacao','av-ultima-varredura','av-obs']
+      .forEach(f => { const el = document.getElementById(f); if(el) el.value=''; });
+    document.getElementById('av-nome').value = '';
+    document.getElementById('av-status').value = 'instalado';
+    document.getElementById('av-cliente').value = '';
+    document.getElementById('av-usuario').value = '';
+
+    if (id) {
+      const a = antivirus.find(x => x.id === id);
+      if (a) {
+        document.getElementById('av-cliente').value = a.clienteId||'';
+        updateAvUsuarioSelect();
+        document.getElementById('av-usuario').value = a.usuarioId||'';
+        document.getElementById('av-ativo').value = a.ativoId||'';
+        document.getElementById('av-nome').value = a.nome||'';
+        document.getElementById('av-nome-custom').value = a.nomeCustom||'';
+        document.getElementById('av-versao').value = a.versao||'';
+        document.getElementById('av-licenca').value = a.licenca||'';
+        document.getElementById('av-validade').value = a.validade||'';
+        document.getElementById('av-status').value = a.status||'instalado';
+        document.getElementById('av-data-inst').value = a.dataInst||'';
+        document.getElementById('av-instalador').value = a.instalador||'';
+        document.getElementById('av-ultima-atualizacao').value = a.ultimaAtualizacao||'';
+        document.getElementById('av-ultima-varredura').value = a.ultimaVarredura||'';
+        document.getElementById('av-obs').value = a.obs||'';
+      }
+    }
+    document.getElementById('av-modal-overlay').classList.add('open');
+  }
+
+  function closeAvModal() {
+    document.getElementById('av-modal-overlay').classList.remove('open');
+    editingAvId = null;
+  }
+  function closeAvModalOutside(e) { if (e.target === document.getElementById('av-modal-overlay')) closeAvModal(); }
+
+  function saveAv() {
+    const clienteId = document.getElementById('av-cliente').value;
+    const usuarioId = document.getElementById('av-usuario').value;
+    const nome      = document.getElementById('av-nome').value;
+    if (!clienteId) { showToast('⚠️ Selecione o cliente.'); return; }
+    if (!usuarioId) { showToast('⚠️ Selecione o colaborador.'); return; }
+    if (!nome)      { showToast('⚠️ Selecione o antivírus.'); return; }
+
+    const reg = {
+      id: editingAvId || Date.now(),
+      clienteId, usuarioId, nome,
+      ativoId:           document.getElementById('av-ativo').value,
+      nomeCustom:        document.getElementById('av-nome-custom').value.trim(),
+      versao:            document.getElementById('av-versao').value.trim(),
+      licenca:           document.getElementById('av-licenca').value.trim(),
+      validade:          document.getElementById('av-validade').value.trim(),
+      status:            document.getElementById('av-status').value,
+      dataInst:          document.getElementById('av-data-inst').value.trim(),
+      instalador:        document.getElementById('av-instalador').value.trim(),
+      ultimaAtualizacao: document.getElementById('av-ultima-atualizacao').value.trim(),
+      ultimaVarredura:   document.getElementById('av-ultima-varredura').value.trim(),
+      obs:               document.getElementById('av-obs').value.trim(),
+    };
+
+    if (editingAvId) {
+      antivirus = antivirus.map(a => a.id === editingAvId ? reg : a);
+      showToast('✅ Registro atualizado!');
+    } else {
+      antivirus.push(reg);
+      showToast('✅ Registro salvo!');
+    }
+    closeAvModal();
+    renderAntivirus();
+    updateAvBadge();
+  }
+
+  function deleteAv(id) {
+    const a = antivirus.find(x => x.id === id);
+    if (!a || !confirm(`Excluir o registro de antivírus de "${usuarioNome(a.usuarioId)}"?`)) return;
+    antivirus = antivirus.filter(x => x.id !== id);
+    renderAntivirus();
+    updateAvBadge();
+    showToast('🗑️ Registro removido.');
+  }
+
+  function updateAvBadge() {
+    const el = document.getElementById('badge-antivirus');
+    if (el) el.textContent = antivirus.length;
+  }
+  // ── FIM ANTIVÍRUS ─────────────────────────────────────────
 
   // ── PERMISSÕES ────────────────────────────────────────────
   let permissoes = [];
