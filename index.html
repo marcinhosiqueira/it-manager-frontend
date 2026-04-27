@@ -513,8 +513,9 @@
     <button class="nav-item" onclick="alert('Módulo de Anotações em desenvolvimento!')">
       <span class="icon">📝</span> Anotações
     </button>
-    <button class="nav-item" onclick="alert('Módulo de Permissões em desenvolvimento!')">
+    <button class="nav-item" onclick="showPage('permissoes')">
       <span class="icon">🛡</span> Permissões
+      <span class="nav-badge" id="badge-permissoes">0</span>
     </button>
     <button class="nav-item" onclick="alert('Módulo de Antivírus em desenvolvimento!')">
       <span class="icon">🔒</span> Antivírus
@@ -842,7 +843,218 @@
     </div>
   </div>
 
+  <!-- PERMISSÕES PAGE -->
+  <div class="content page" id="page-permissoes">
+    <div class="page-header">
+      <div>
+        <div class="page-title">Permissões</div>
+        <div class="page-sub">Pastas, grupos AD e VPN por usuário e cliente</div>
+      </div>
+      <button class="btn btn-primary" onclick="openPermModal()">+ Nova permissão</button>
+    </div>
+
+    <!-- Cards de resumo -->
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px">
+      <div class="stat-card">
+        <div class="stat-header"><div class="stat-label">Total</div><div class="stat-icon">🛡</div></div>
+        <div class="stat-value" id="perm-count-total">0</div>
+        <div class="stat-change neutral">registros</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-header"><div class="stat-label">Com VPN</div><div class="stat-icon">🔐</div></div>
+        <div class="stat-value" id="perm-count-vpn">0</div>
+        <div class="stat-change neutral">usuários</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-header"><div class="stat-label">Controle Total</div><div class="stat-icon">⚡</div></div>
+        <div class="stat-value" id="perm-count-full">0</div>
+        <div class="stat-change neutral">acessos</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-header"><div class="stat-label">Sem Acesso</div><div class="stat-icon">🚫</div></div>
+        <div class="stat-value" id="perm-count-none">0</div>
+        <div class="stat-change neutral">bloqueados</div>
+      </div>
+    </div>
+
+    <div class="ativos-toolbar">
+      <div class="topbar-search" style="width:260px">
+        <span style="color:var(--muted)">🔍</span>
+        <input type="text" id="perm-search" placeholder="Usuário, pasta, grupo AD..." oninput="renderPermissoes()"/>
+      </div>
+      <select class="select-filter" id="perm-filter-cliente" onchange="renderPermissoes()">
+        <option value="">Todos os clientes</option>
+      </select>
+      <select class="select-filter" id="perm-filter-nivel" onchange="renderPermissoes()">
+        <option value="">Todos os níveis</option>
+        <option value="controle_total">Controle total</option>
+        <option value="escrita">Leitura e Escrita</option>
+        <option value="leitura">Somente Leitura</option>
+        <option value="sem_acesso">Sem acesso</option>
+      </select>
+      <select class="select-filter" id="perm-filter-vpn" onchange="renderPermissoes()">
+        <option value="">VPN: todos</option>
+        <option value="sim">Com VPN</option>
+        <option value="nao">Sem VPN</option>
+      </select>
+    </div>
+
+    <div class="ativos-table-wrap">
+      <table>
+        <thead><tr>
+          <th style="padding-left:20px">Usuário</th>
+          <th>Cliente</th>
+          <th>Pasta / Recurso</th>
+          <th>Nível de acesso</th>
+          <th>Grupos AD</th>
+          <th>VPN</th>
+          <th></th>
+        </tr></thead>
+        <tbody id="perm-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
 </div><!-- end .main -->
+
+<!-- MODAL PERMISSÕES -->
+<div class="modal-overlay" id="perm-modal-overlay" onclick="closePermModalOutside(event)">
+  <div class="modal" style="width:580px;max-width:97vw;max-height:95vh;display:flex;flex-direction:column;">
+    <div class="modal-header">
+      <div class="modal-title" id="perm-modal-title">Nova permissão</div>
+      <button class="modal-close" onclick="closePermModal()">×</button>
+    </div>
+    <div class="modal-body-scroll">
+
+      <div class="modal-section-title">Vínculo</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Cliente *</label>
+          <select id="p-cliente" onchange="updatePermUsuarioSelect()">
+            <option value="">Selecionar cliente...</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Usuário *</label>
+          <select id="p-usuario">
+            <option value="">Selecionar usuário...</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="modal-section-title" style="margin-top:4px">Permissão de Pasta / Recurso</div>
+      <div class="form-group">
+        <label>Caminho da pasta ou recurso *</label>
+        <input type="text" id="p-pasta" placeholder="Ex: \\servidor\Financeiro\Relatórios"/>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Nível de acesso *</label>
+          <select id="p-nivel">
+            <option value="">Selecionar...</option>
+            <option value="controle_total">⚡ Controle total</option>
+            <option value="escrita">✏️ Leitura e Escrita</option>
+            <option value="leitura">👁 Somente Leitura</option>
+            <option value="sem_acesso">🚫 Sem acesso</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Tipo de recurso</label>
+          <select id="p-tipo">
+            <option value="">Selecionar...</option>
+            <option value="Pasta">📁 Pasta de rede</option>
+            <option value="Sistema">💻 Sistema / Software</option>
+            <option value="Impressora">🖨 Impressora</option>
+            <option value="Banco de dados">🗄 Banco de dados</option>
+            <option value="Email">✉️ E-mail / Exchange</option>
+            <option value="Outro">📦 Outro</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Observações sobre o acesso</label>
+        <textarea id="p-obs-pasta" placeholder="Ex: Acesso liberado mediante solicitação do gestor em 01/01/2024..."></textarea>
+      </div>
+
+      <div class="modal-section-title" style="margin-top:4px">Grupos do Active Directory (AD)</div>
+      <div class="form-group">
+        <label>Grupos AD (Enter para adicionar)</label>
+        <div class="chip-input-wrap" id="perm-grupos-wrap">
+          <input class="chip-text-input" id="p-grupo-input" placeholder="Ex: GRP_Financeiro, Domain Users..." onkeydown="addPermChip(event)"/>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Domínio</label>
+          <input type="text" id="p-dominio" placeholder="Ex: empresa.local"/>
+        </div>
+        <div class="form-group">
+          <label>Unidade Organizacional (OU)</label>
+          <input type="text" id="p-ou" placeholder="Ex: OU=Financeiro,DC=empresa"/>
+        </div>
+      </div>
+
+      <div class="modal-section-title" style="margin-top:4px">VPN</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Possui acesso VPN?</label>
+          <select id="p-vpn" onchange="toggleVpnFields()">
+            <option value="nao">Não</option>
+            <option value="sim">Sim</option>
+          </select>
+        </div>
+        <div class="form-group" id="p-vpn-tipo-group" style="display:none">
+          <label>Tipo de VPN</label>
+          <select id="p-vpn-tipo">
+            <option value="">Selecionar...</option>
+            <option>OpenVPN</option>
+            <option>FortiClient</option>
+            <option>Cisco AnyConnect</option>
+            <option>GlobalProtect</option>
+            <option>WireGuard</option>
+            <option>L2TP/IPSec</option>
+            <option>Outro</option>
+          </select>
+        </div>
+      </div>
+      <div id="p-vpn-extra" style="display:none">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Data de instalação</label>
+            <input type="text" id="p-vpn-data" placeholder="DD/MM/AAAA"/>
+          </div>
+          <div class="form-group">
+            <label>Instalado por</label>
+            <input type="text" id="p-vpn-instalador" placeholder="Ex: João TI / Você mesmo"/>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Usuário VPN</label>
+            <input type="text" id="p-vpn-user" placeholder="Ex: jsilva.vpn"/>
+          </div>
+          <div class="form-group">
+            <label>Status da VPN</label>
+            <select id="p-vpn-status">
+              <option value="ativa">Ativa</option>
+              <option value="suspensa">Suspensa</option>
+              <option value="revogada">Revogada</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Observações sobre a VPN</label>
+          <textarea id="p-vpn-obs" placeholder="Ex: VPN instalada para acesso remoto durante home office..."></textarea>
+        </div>
+      </div>
+
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closePermModal()">Cancelar</button>
+      <button class="btn btn-primary" id="perm-save-btn" onclick="savePerm()">Salvar permissão</button>
+    </div>
+  </div>
+</div>
 
 <!-- MODAL INVENTÁRIO -->
 <div class="modal-overlay" id="inv-modal-overlay" onclick="closeInvModalOutside(event)">
@@ -1383,7 +1595,7 @@
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
     document.getElementById('page-' + id).classList.add('active');
-    const labels = { dashboard:'Dashboard', clientes:'Clientes', ativos:'Ativos', usuarios:'Usuários' };
+    const labels = { dashboard:'Dashboard', clientes:'Clientes', ativos:'Ativos', usuarios:'Usuários', permissoes:'Permissões' };
     document.getElementById('topbar-title').textContent = labels[id] || id;
     const nav = [...document.querySelectorAll('.nav-item')].find(n => n.textContent.trim().toLowerCase().startsWith(id.substring(0,4)));
     if (nav) nav.classList.add('active');
@@ -1391,6 +1603,7 @@
     if (id === 'dashboard') renderDashboard();
     if (id === 'ativos') { populateClienteSelects(); renderAtivos(); }
     if (id === 'usuarios') { populateUserSelects(); renderUsuarios(); }
+    if (id === 'permissoes') { populatePermSelects(); renderPermissoes(); }
   }
 
   function renderDashboard() {
@@ -1707,6 +1920,299 @@
     if (el) el.textContent = ativos.length;
   }
   // ── FIM ATIVOS ───────────────────────────────────────────
+
+  // ── PERMISSÕES ────────────────────────────────────────────
+  let permissoes = [];
+  let editingPermId = null;
+  let permGrupos = [];
+
+  const NIVEL_BADGE = { controle_total:'badge-red', escrita:'badge-amber', leitura:'badge-blue', sem_acesso:'badge-red' };
+  const NIVEL_LABEL = { controle_total:'⚡ Controle total', escrita:'✏️ Leitura e Escrita', leitura:'👁 Somente Leitura', sem_acesso:'🚫 Sem acesso' };
+  const NIVEL_COLOR = { controle_total:'var(--red)', escrita:'var(--amber)', leitura:'var(--accent)', sem_acesso:'var(--muted)' };
+
+  function toggleVpnFields() {
+    const val = document.getElementById('p-vpn').value;
+    document.getElementById('p-vpn-extra').style.display = val === 'sim' ? 'block' : 'none';
+    document.getElementById('p-vpn-tipo-group').style.display = val === 'sim' ? 'block' : 'none';
+  }
+
+  function addPermChip(e) {
+    if (e.key !== 'Enter' && e.key !== ',') return;
+    e.preventDefault();
+    const val = document.getElementById('p-grupo-input').value.trim();
+    if (!val || permGrupos.includes(val)) { document.getElementById('p-grupo-input').value = ''; return; }
+    permGrupos.push(val);
+    document.getElementById('p-grupo-input').value = '';
+    renderPermChips();
+  }
+
+  function removePermChip(val) {
+    permGrupos = permGrupos.filter(v => v !== val);
+    renderPermChips();
+  }
+
+  function renderPermChips() {
+    const wrap = document.getElementById('perm-grupos-wrap');
+    const inp = document.getElementById('p-grupo-input');
+    if (!wrap) return;
+    [...wrap.querySelectorAll('.chip')].forEach(c => c.remove());
+    permGrupos.forEach(val => {
+      const chip = document.createElement('span');
+      chip.className = 'chip';
+      chip.innerHTML = `${val}<span class="chip-remove" onclick="removePermChip('${val}')">×</span>`;
+      wrap.insertBefore(chip, inp);
+    });
+  }
+
+  function populatePermSelects() {
+    const opts = clients.map(c => `<option value="${c.id}">${c.nome}</option>`).join('');
+    const fc = document.getElementById('perm-filter-cliente');
+    const pc = document.getElementById('p-cliente');
+    if (fc) fc.innerHTML = '<option value="">Todos os clientes</option>' + opts;
+    if (pc) pc.innerHTML = '<option value="">Selecionar cliente...</option>' + opts;
+    updatePermUsuarioSelect();
+  }
+
+  function updatePermUsuarioSelect() {
+    const clienteId = document.getElementById('p-cliente')?.value || '';
+    const sel = document.getElementById('p-usuario');
+    if (!sel) return;
+    const list = clienteId ? usuarios.filter(u => String(u.clienteId) === clienteId) : usuarios;
+    sel.innerHTML = '<option value="">Selecionar usuário...</option>'
+      + list.map(u => `<option value="${u.id}">${u.nome}${u.setor ? ' — ' + u.setor : ''}</option>`).join('');
+  }
+
+  function usuarioNome(id) {
+    const u = usuarios.find(u => String(u.id) === String(id));
+    return u ? u.nome : '—';
+  }
+
+  function renderPermissoes() {
+    const total = document.getElementById('perm-count-total');
+    const vpn   = document.getElementById('perm-count-vpn');
+    const full  = document.getElementById('perm-count-full');
+    const none  = document.getElementById('perm-count-none');
+    if (total) total.textContent = permissoes.length;
+    if (vpn)   vpn.textContent   = permissoes.filter(p => p.vpn === 'sim').length;
+    if (full)  full.textContent  = permissoes.filter(p => p.nivel === 'controle_total').length;
+    if (none)  none.textContent  = permissoes.filter(p => p.nivel === 'sem_acesso').length;
+
+    const tbody = document.getElementById('perm-tbody');
+    if (!tbody) return;
+    const search = (document.getElementById('perm-search')?.value || '').toLowerCase();
+    const fc = document.getElementById('perm-filter-cliente')?.value || '';
+    const fn = document.getElementById('perm-filter-nivel')?.value || '';
+    const fv = document.getElementById('perm-filter-vpn')?.value || '';
+
+    let list = permissoes.filter(p => {
+      const un = usuarioNome(p.usuarioId).toLowerCase();
+      if (search && !un.includes(search) && !(p.pasta||'').toLowerCase().includes(search)
+        && !(p.grupos||[]).join(' ').toLowerCase().includes(search)) return false;
+      if (fc && String(p.clienteId) !== fc) return false;
+      if (fn && p.nivel !== fn) return false;
+      if (fv && p.vpn !== fv) return false;
+      return true;
+    });
+
+    if (!list.length) {
+      tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:40px">
+        ${permissoes.length ? 'Nenhum resultado para os filtros.' : 'Nenhuma permissão cadastrada. Clique em <strong>+ Nova permissão</strong>.'}
+      </td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = list.map(p => {
+      const u = usuarios.find(u => String(u.id) === String(p.usuarioId));
+      const cor = u ? getColor(u.nome) : '#7b8099';
+      const ini = u ? getInitials(u.nome) : '??';
+      const grupos = (p.grupos||[]).slice(0,2);
+      const extra = (p.grupos||[]).length - 2;
+      const vpnBadge = p.vpn === 'sim'
+        ? `<span class="badge badge-green badge-dot">${p.vpnStatus === 'suspensa' ? 'Suspensa' : p.vpnStatus === 'revogada' ? 'Revogada' : 'Ativa'}</span>`
+        : `<span class="badge" style="background:var(--surface2);color:var(--muted)">Sem VPN</span>`;
+      return `<tr style="cursor:pointer" onclick="openPermDetail(${p.id})">
+        <td style="padding-left:20px">
+          <div style="display:flex;align-items:center;gap:10px">
+            <div class="user-avatar" style="background:${cor};width:32px;height:32px;font-size:12px">${ini}</div>
+            <div>
+              <div style="font-weight:500;font-size:13px">${u ? u.nome : '—'}</div>
+              <div style="color:var(--muted);font-size:11px">${u ? u.cargo||'' : ''}</div>
+            </div>
+          </div>
+        </td>
+        <td style="font-size:13px">${clienteNome(p.clienteId)}</td>
+        <td>
+          <div style="font-size:12px;font-family:var(--mono)">${p.pasta||'—'}</div>
+          ${p.tipo ? `<div style="font-size:11px;color:var(--muted)">${p.tipo}</div>` : ''}
+        </td>
+        <td><span style="font-size:13px;font-weight:500;color:${NIVEL_COLOR[p.nivel]||'var(--muted)'}">${NIVEL_LABEL[p.nivel]||'—'}</span></td>
+        <td>
+          <div class="tags-wrap">
+            ${grupos.map(g=>`<span class="tag">${g}</span>`).join('')}
+            ${extra > 0 ? `<span class="tag">+${extra}</span>` : ''}
+            ${!grupos.length ? '<span style="color:var(--muted);font-size:12px">—</span>' : ''}
+          </div>
+        </td>
+        <td>${vpnBadge}</td>
+        <td onclick="event.stopPropagation()">
+          <button class="action-btn" onclick="openPermModal(${p.id})">✏️</button>
+          <button class="action-btn" onclick="deletePerm(${p.id})">🗑️</button>
+        </td>
+      </tr>`;
+    }).join('');
+  }
+
+  function openPermModal(id) {
+    populatePermSelects();
+    editingPermId = id || null;
+    permGrupos = [];
+    document.getElementById('perm-modal-title').textContent = id ? 'Editar permissão' : 'Nova permissão';
+    document.getElementById('perm-save-btn').textContent = id ? 'Salvar alterações' : 'Salvar permissão';
+    ['p-pasta','p-dominio','p-ou','p-vpn-data','p-vpn-instalador','p-vpn-user','p-obs-pasta','p-vpn-obs']
+      .forEach(f => { const el = document.getElementById(f); if(el) el.value=''; });
+    document.getElementById('p-nivel').value = '';
+    document.getElementById('p-tipo').value = '';
+    document.getElementById('p-cliente').value = '';
+    document.getElementById('p-vpn').value = 'nao';
+    document.getElementById('p-vpn-tipo').value = '';
+    document.getElementById('p-vpn-status').value = 'ativa';
+    document.getElementById('p-vpn-extra').style.display = 'none';
+    document.getElementById('p-vpn-tipo-group').style.display = 'none';
+    renderPermChips();
+
+    if (id) {
+      const p = permissoes.find(x => x.id === id);
+      if (p) {
+        document.getElementById('p-cliente').value = p.clienteId||'';
+        updatePermUsuarioSelect();
+        document.getElementById('p-usuario').value = p.usuarioId||'';
+        document.getElementById('p-pasta').value = p.pasta||'';
+        document.getElementById('p-nivel').value = p.nivel||'';
+        document.getElementById('p-tipo').value = p.tipo||'';
+        document.getElementById('p-obs-pasta').value = p.obsPasta||'';
+        document.getElementById('p-dominio').value = p.dominio||'';
+        document.getElementById('p-ou').value = p.ou||'';
+        document.getElementById('p-vpn').value = p.vpn||'nao';
+        document.getElementById('p-vpn-tipo').value = p.vpnTipo||'';
+        document.getElementById('p-vpn-data').value = p.vpnData||'';
+        document.getElementById('p-vpn-instalador').value = p.vpnInstalador||'';
+        document.getElementById('p-vpn-user').value = p.vpnUser||'';
+        document.getElementById('p-vpn-status').value = p.vpnStatus||'ativa';
+        document.getElementById('p-vpn-obs').value = p.vpnObs||'';
+        permGrupos = [...(p.grupos||[])];
+        renderPermChips();
+        toggleVpnFields();
+      }
+    }
+    document.getElementById('perm-modal-overlay').classList.add('open');
+  }
+
+  function closePermModal() {
+    document.getElementById('perm-modal-overlay').classList.remove('open');
+    editingPermId = null;
+  }
+  function closePermModalOutside(e) { if (e.target === document.getElementById('perm-modal-overlay')) closePermModal(); }
+
+  function savePerm() {
+    const clienteId = document.getElementById('p-cliente').value;
+    const usuarioId = document.getElementById('p-usuario').value;
+    const pasta     = document.getElementById('p-pasta').value.trim();
+    const nivel     = document.getElementById('p-nivel').value;
+    if (!clienteId) { showToast('⚠️ Selecione o cliente.'); return; }
+    if (!usuarioId) { showToast('⚠️ Selecione o usuário.'); return; }
+    if (!pasta)     { document.getElementById('p-pasta').focus(); showToast('⚠️ Informe a pasta ou recurso.'); return; }
+    if (!nivel)     { showToast('⚠️ Selecione o nível de acesso.'); return; }
+
+    const perm = {
+      id: editingPermId || Date.now(),
+      clienteId, usuarioId, pasta, nivel,
+      tipo:          document.getElementById('p-tipo').value,
+      obsPasta:      document.getElementById('p-obs-pasta').value.trim(),
+      grupos:        [...permGrupos],
+      dominio:       document.getElementById('p-dominio').value.trim(),
+      ou:            document.getElementById('p-ou').value.trim(),
+      vpn:           document.getElementById('p-vpn').value,
+      vpnTipo:       document.getElementById('p-vpn-tipo').value,
+      vpnData:       document.getElementById('p-vpn-data').value.trim(),
+      vpnInstalador: document.getElementById('p-vpn-instalador').value.trim(),
+      vpnUser:       document.getElementById('p-vpn-user').value.trim(),
+      vpnStatus:     document.getElementById('p-vpn-status').value,
+      vpnObs:        document.getElementById('p-vpn-obs').value.trim(),
+    };
+
+    if (editingPermId) {
+      permissoes = permissoes.map(p => p.id === editingPermId ? perm : p);
+      showToast('✅ Permissão atualizada!');
+    } else {
+      permissoes.push(perm);
+      showToast('✅ Permissão salva!');
+    }
+    closePermModal();
+    renderPermissoes();
+    updatePermBadge();
+  }
+
+  function openPermDetail(id) {
+    const p = permissoes.find(x => x.id === id);
+    if (!p) return;
+    const u = usuarios.find(u => String(u.id) === String(p.usuarioId));
+    const cor = u ? getColor(u.nome) : '#7b8099';
+    const ini = u ? getInitials(u.nome) : '??';
+    document.getElementById('dp-avatar').style.background = cor;
+    document.getElementById('dp-avatar').textContent = ini;
+    document.getElementById('dp-nome').textContent = u ? u.nome : '—';
+    document.getElementById('dp-cargo').textContent = `${clienteNome(p.clienteId)}${u && u.setor ? ' · ' + u.setor : ''}`;
+    document.getElementById('dp-edit-btn').onclick = () => { closeDetailPanel(); openPermModal(p.id); };
+
+    const vpnSection = p.vpn === 'sim' ? `
+      <div class="detail-section">
+        <div class="detail-label">VPN</div>
+        ${row('Status VPN', `<span class="badge ${p.vpnStatus==='ativa'?'badge-green':p.vpnStatus==='suspensa'?'badge-amber':'badge-red'} badge-dot">${p.vpnStatus||'Ativa'}</span>`)}
+        ${row('Tipo', p.vpnTipo||'—')}
+        ${row('Usuário VPN', p.vpnUser ? `<span style="font-family:var(--mono);font-size:12px">${p.vpnUser}</span>` : '—')}
+        ${row('Instalada em', p.vpnData||'—')}
+        ${row('Instalado por', p.vpnInstalador||'—')}
+        ${p.vpnObs ? row('Observações', `<span style="color:var(--muted)">${p.vpnObs}</span>`) : ''}
+      </div>` : `
+      <div class="detail-section">
+        <div class="detail-label">VPN</div>
+        <div style="color:var(--muted);font-size:13px">Sem acesso VPN</div>
+      </div>`;
+
+    document.getElementById('dp-body').innerHTML = `
+      <div class="detail-section">
+        <div class="detail-label">Pasta / Recurso</div>
+        ${row('Caminho', `<span style="font-family:var(--mono);font-size:12px;word-break:break-all">${p.pasta}</span>`)}
+        ${row('Tipo', p.tipo||'—')}
+        ${row('Nível', `<span style="font-weight:600;color:${NIVEL_COLOR[p.nivel]}">${NIVEL_LABEL[p.nivel]||p.nivel}</span>`)}
+        ${p.obsPasta ? row('Obs.', `<span style="color:var(--muted)">${p.obsPasta}</span>`) : ''}
+      </div>
+      <div class="detail-section">
+        <div class="detail-label">Active Directory</div>
+        ${row('Domínio', p.dominio||'—')}
+        ${row('OU', p.ou ? `<span style="font-family:var(--mono);font-size:11px">${p.ou}</span>` : '—')}
+        ${row('Grupos', p.grupos?.length ? `<div class="tags-wrap">${p.grupos.map(g=>`<span class="tag">${g}</span>`).join('')}</div>` : '—')}
+      </div>
+      ${vpnSection}`;
+
+    document.getElementById('user-detail-panel').classList.add('open');
+    document.getElementById('detail-overlay').style.display = 'block';
+  }
+
+  function deletePerm(id) {
+    const p = permissoes.find(x => x.id === id);
+    if (!p || !confirm(`Excluir permissão de "${usuarioNome(p.usuarioId)}" para "${p.pasta}"?`)) return;
+    permissoes = permissoes.filter(x => x.id !== id);
+    renderPermissoes();
+    updatePermBadge();
+    showToast('🗑️ Permissão removida.');
+  }
+
+  function updatePermBadge() {
+    const el = document.getElementById('badge-permissoes');
+    if (el) el.textContent = permissoes.length;
+  }
+  // ── FIM PERMISSÕES ────────────────────────────────────────
 
   const INV_EMOJI = { Computador:'🖥', Notebook:'💻', Celular:'📱', Tablet:'⬛' };
   const INV_STATUS_BADGE = {
