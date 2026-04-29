@@ -2855,8 +2855,14 @@
       return;
     }
     grid.innerHTML = filtered.map((c,i) => `
-      <div class="client-card" onclick="alert('Detalhes de ${c.nome} em breve!')">
-        <div class="client-avatar" style="background:${getColor(c.nome)}">${getInitials(c.nome)}</div>
+      <div class="client-card">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px">
+          <div class="client-avatar" style="background:${getColor(c.nome)}">${getInitials(c.nome)}</div>
+          <div style="display:flex;gap:4px">
+            <button class="action-btn" onclick="openModal(${c.id})" title="Editar">✏️</button>
+            <button class="action-btn" onclick="deleteCliente(${c.id})" title="Excluir">🗑️</button>
+          </div>
+        </div>
         <div class="client-name">${c.nome}</div>
         <div class="client-info">
           ${c.resp ? '👤 ' + c.resp + '<br>' : ''}
@@ -2879,8 +2885,8 @@
             <div class="client-stat-lbl">Usuários</div>
           </div>
           <div class="client-stat">
-            <div class="client-stat-val">0</div>
-            <div class="client-stat-lbl">Notas</div>
+            <div class="client-stat-val">${antivirus.filter(a=>String(a.clienteId)===String(c.id)).length}</div>
+            <div class="client-stat-lbl">Antivírus</div>
           </div>
         </div>
       </div>`).join('');
@@ -2893,47 +2899,54 @@
     renderClients();
   }
 
-  function openModal() {
+  let editingClientId = null;
+
+  async function deleteCliente(id) {
+    const c = clients.find(x => x.id === id);
+    if (!c || !confirm(`Excluir o cliente "${c.nome}"?`)) return;
+    const ok = await api('DELETE', '/clientes/' + id);
+    if (ok) {
+      clients = clients.filter(x => x.id !== id);
+      renderClients(); renderDashboard(); updateBadge();
+      showToast('🗑️ Cliente removido.');
+    }
+  }
+
+  function openModal(id) {
+    editingClientId = id || null;
+    ['f-nome','f-cnpj','f-resp','f-tel','f-email','f-obs'].forEach(fid => {
+      const el = document.getElementById(fid); if(el) el.value = '';
+    });
+    document.getElementById('f-segmento').value = '';
+    document.getElementById('f-status').value = 'ativo';
+    if (id) {
+      const c = clients.find(x => x.id === id);
+      if (c) {
+        document.getElementById('f-nome').value = c.nome||'';
+        document.getElementById('f-cnpj').value = c.cnpj||'';
+        document.getElementById('f-resp').value = c.resp||'';
+        document.getElementById('f-tel').value = c.tel||'';
+        document.getElementById('f-email').value = c.email||'';
+        document.getElementById('f-segmento').value = c.segmento||'';
+        document.getElementById('f-status').value = c.status||'ativo';
+        document.getElementById('f-obs').value = c.obs||'';
+      }
+    }
     document.getElementById('modal-overlay').classList.add('open');
     document.getElementById('f-nome').focus();
   }
   function closeModal() {
     document.getElementById('modal-overlay').classList.remove('open');
-    ['f-nome','f-cnpj','f-resp','f-tel','f-email','f-obs'].forEach(id => document.getElementById(id).value = '');
+    editingClientId = null;
+    ['f-nome','f-cnpj','f-resp','f-tel','f-email','f-obs'].forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
     document.getElementById('f-segmento').value = '';
     document.getElementById('f-status').value = 'ativo';
   }
   function closeModalOutside(e) { if (e.target === document.getElementById('modal-overlay')) closeModal(); }
 
-  function saveClient() {
-    const nome = document.getElementById('f-nome').value.trim();
-    if (!nome) { document.getElementById('f-nome').focus(); showToast('⚠️ Informe o nome da empresa.'); return; }
-    const client = {
-      id: Date.now(),
-      nome,
-      cnpj: document.getElementById('f-cnpj').value.trim(),
-      resp: document.getElementById('f-resp').value.trim(),
-      tel: document.getElementById('f-tel').value.trim(),
-      email: document.getElementById('f-email').value.trim(),
-      segmento: document.getElementById('f-segmento').value,
-      status: document.getElementById('f-status').value,
-      obs: document.getElementById('f-obs').value.trim(),
-      createdAt: new Date().toISOString()
-    };
-    clients.push(client);
-    localStorage.setItem('itm_clients', JSON.stringify(clients));
-    addActivity(`Cliente <strong>${nome}</strong> cadastrado`, '#22c984');
-    closeModal();
-    renderClients();
-    renderDashboard();
-    updateBadge();
-    showToast('✅ Cliente salvo com sucesso!');
-  }
-
   function addActivity(text, color) {
     const now = new Date();
     activities.push({ text, color, time: now.toLocaleString('pt-BR', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' }) });
-    localStorage.setItem('itm_activities', JSON.stringify(activities));
   }
 
   function updateBadge() {
@@ -5147,20 +5160,36 @@
   let TOKEN = '';
 
   async function api(method, path, body) {
-    const opts = {
-      method,
-      headers: { 'Content-Type': 'application/json', ...(TOKEN ? { Authorization: 'Bearer ' + TOKEN } : {}) }
-    };
-    if (body) opts.body = JSON.stringify(body);
-    const res = await fetch(API + path, opts);
-    if (res.status === 401) { logout(); return null; }
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      showToast('❌ ' + (err.detail || 'Erro na requisição'));
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 15000);
+    try {
+      const opts = {
+        method,
+        mode: 'cors',
+        signal: controller.signal,
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          ...(TOKEN ? { Authorization: 'Bearer ' + TOKEN } : {})
+        }
+      };
+      if (body) opts.body = JSON.stringify(body);
+      const res = await fetch(API + path, opts);
+      clearTimeout(timeout);
+      if (res.status === 401) { logout(); return null; }
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        showToast('❌ ' + (err.detail || 'Erro na requisição'));
+        return null;
+      }
+      if (res.status === 204) return true;
+      return res.json();
+    } catch (e) {
+      clearTimeout(timeout);
+      if (e.name === 'AbortError') showToast('❌ Tempo esgotado. Verifique sua conexão.');
+      else showToast('❌ Erro de conexão: ' + e.message);
       return null;
     }
-    if (res.status === 204) return true;
-    return res.json();
   }
 
   // ── AUTENTICAÇÃO ──────────────────────────────────────────
@@ -5252,8 +5281,7 @@
   }
 
   // ── CLIENTES (API) ────────────────────────────────────────
-  const _saveClientOrig = saveClient;
-  saveClient = async function() {
+  async function saveClient() {
     const nome = document.getElementById('f-nome').value.trim();
     if (!nome) { document.getElementById('f-nome').focus(); showToast('⚠️ Informe o nome da empresa.'); return; }
     const body = {
