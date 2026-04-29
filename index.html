@@ -419,7 +419,177 @@
   .detail-row-label { font-size: 12px; color: var(--muted); width: 120px; flex-shrink: 0; padding-top: 1px; }
   .detail-row-val { font-size: 13px; flex: 1; word-break: break-word; }
 
-  /* INVENTÁRIO */
+  /* BASE DE CONHECIMENTO */
+  .base-grid { display: grid; grid-template-columns: 280px 1fr; gap: 20px; }
+  .base-sidebar { display: flex; flex-direction: column; gap: 8px; }
+  .base-cat {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; overflow: hidden;
+  }
+  .base-cat-header {
+    padding: 12px 16px; display: flex; align-items: center; gap: 10px;
+    cursor: pointer; font-size: 13.5px; font-weight: 500;
+    justify-content: space-between;
+  }
+  .base-cat-header:hover { background: var(--surface2); }
+  .base-cat-header.active { color: var(--accent); }
+  .base-cat-count { font-size: 11px; background: var(--surface2); border-radius: 99px; padding: 2px 8px; color: var(--muted); }
+  .base-article-list { border-top: 1px solid var(--border); }
+  .base-article-item {
+    padding: 10px 16px 10px 36px; font-size: 13px; cursor: pointer;
+    color: var(--muted); border-bottom: 1px solid var(--border); transition: all .15s;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .base-article-item:last-child { border-bottom: none; }
+  .base-article-item:hover { background: var(--surface2); color: var(--text); }
+  .base-article-item.active { color: var(--accent); background: rgba(79,142,247,0.05); }
+  .base-content { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); }
+  .base-content-header {
+    padding: 20px 24px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: flex-start; justify-content: space-between; gap: 16px;
+  }
+  .base-content-body { padding: 24px; }
+  .base-tag {
+    display: inline-flex; align-items: center;
+    background: rgba(79,142,247,0.1); color: var(--accent);
+    border-radius: 6px; padding: 2px 10px; font-size: 11px; font-weight: 500;
+    margin: 2px;
+  }
+  .code-block {
+    background: var(--bg); border: 1px solid var(--border2); border-radius: 8px;
+    padding: 16px; font-family: var(--mono); font-size: 12.5px; line-height: 1.6;
+    overflow-x: auto; position: relative; margin: 12px 0;
+    white-space: pre-wrap; word-break: break-word;
+  }
+  .copy-btn {
+    position: absolute; top: 8px; right: 8px;
+    background: var(--surface2); border: 1px solid var(--border2);
+    border-radius: 6px; padding: 4px 10px; font-size: 11px;
+    cursor: pointer; color: var(--muted); font-family: var(--font);
+    transition: all .15s;
+  }
+  .copy-btn:hover { color: var(--text); background: var(--surface); }
+  .step-list { list-style: none; counter-reset: steps; padding: 0; margin: 12px 0; }
+  .step-list li {
+    counter-increment: steps; padding: 10px 12px 10px 48px; position: relative;
+    border-left: 2px solid var(--border); margin-left: 16px; margin-bottom: 8px;
+    font-size: 13.5px; line-height: 1.6;
+  }
+  .step-list li::before {
+    content: counter(steps); position: absolute; left: -14px; top: 8px;
+    width: 24px; height: 24px; border-radius: 50%;
+    background: var(--accent); color: #fff; font-size: 11px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .base-empty { text-align: center; padding: 60px 20px; color: var(--muted); }
+  .nivel-badge {
+    font-size: 11px; padding: 2px 8px; border-radius: 99px; font-weight: 500;
+  }
+  .nivel-basico { background: rgba(34,201,132,0.12); color: var(--green); }
+  .nivel-intermediario { background: rgba(245,158,11,0.12); color: var(--amber); }
+  .nivel-avancado { background: rgba(244,86,106,0.12); color: var(--red); }
+  .config-grid { display: grid; grid-template-columns: 220px 1fr; gap: 24px; }
+  .config-menu { display: flex; flex-direction: column; gap: 2px; }
+  .config-menu-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 14px; border-radius: 8px; cursor: pointer;
+    font-size: 13.5px; color: var(--muted); border: none;
+    background: none; font-family: var(--font); width: 100%; text-align: left;
+    transition: all .15s;
+  }
+  .config-menu-item:hover { background: var(--surface2); color: var(--text); }
+  .config-menu-item.active { background: rgba(79,142,247,0.12); color: var(--accent); font-weight: 500; }
+  .config-panel { display: none; }
+  .config-panel.active { display: block; }
+  .config-section {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); overflow: hidden; margin-bottom: 20px;
+  }
+  .config-section-header {
+    padding: 16px 20px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .config-section-title { font-size: 14px; font-weight: 600; }
+  .config-section-body { padding: 20px; display: flex; flex-direction: column; gap: 16px; }
+  .config-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+  .config-row-info { flex: 1; }
+  .config-row-label { font-size: 13.5px; font-weight: 500; }
+  .config-row-desc { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .toggle-switch {
+    width: 40px; height: 22px; border-radius: 99px;
+    background: var(--surface2); border: 1px solid var(--border2);
+    cursor: pointer; position: relative; transition: background .2s; flex-shrink: 0;
+  }
+  .toggle-switch.on { background: var(--accent); border-color: var(--accent); }
+  .toggle-switch::after {
+    content: ''; position: absolute; top: 2px; left: 2px;
+    width: 16px; height: 16px; border-radius: 50%; background: #fff;
+    transition: transform .2s;
+  }
+  .toggle-switch.on::after { transform: translateX(18px); }
+  .sys-user-card {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 10px; padding: 14px 16px;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .perm-check { display: flex; align-items: center; gap: 6px; font-size: 12.5px; cursor: pointer; }
+  .perm-check input { accent-color: var(--accent); width: 14px; height: 14px; }
+  .rel-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; margin-bottom: 28px; }
+  .rel-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 20px; cursor: pointer;
+    transition: all .2s; position: relative; overflow: hidden;
+  }
+  .rel-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+  .rel-card::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    opacity: 0; transition: opacity .2s;
+  }
+  .rel-card:hover::before { opacity: 1; }
+  .rel-card-icon { font-size: 28px; margin-bottom: 10px; }
+  .rel-card-title { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+  .rel-card-desc { font-size: 12px; color: var(--muted); line-height: 1.5; }
+  .rel-card-badge {
+    position: absolute; top: 14px; right: 14px;
+    font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 99px;
+  }
+  .report-preview {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); overflow: hidden; margin-top: 20px;
+  }
+  .report-toolbar {
+    padding: 14px 20px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  }
+  .report-title { font-size: 15px; font-weight: 600; flex: 1; }
+  .report-body { padding: 24px; }
+  .report-section { margin-bottom: 24px; }
+  .report-section-title {
+    font-size: 11px; color: var(--muted); text-transform: uppercase;
+    letter-spacing: 0.8px; font-weight: 600; margin-bottom: 12px;
+    padding-bottom: 8px; border-bottom: 1px solid var(--border);
+  }
+  .report-stat-row { display: flex; gap: 16px; margin-bottom: 16px; flex-wrap: wrap; }
+  .report-stat-box {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 8px; padding: 12px 16px; min-width: 120px;
+  }
+  .report-stat-val { font-size: 22px; font-weight: 600; letter-spacing: -0.5px; }
+  .report-stat-lbl { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .email-config-box {
+    background: var(--surface); border: 1px solid var(--border2);
+    border-radius: var(--radius); padding: 20px; margin-top: 20px;
+  }
+  .tab-bar { display: flex; gap: 4px; margin-bottom: 24px; border-bottom: 1px solid var(--border); }
+  .tab-btn {
+    padding: 10px 18px; font-size: 13px; font-weight: 500;
+    border: none; background: none; color: var(--muted); cursor: pointer;
+    border-bottom: 2px solid transparent; margin-bottom: -1px;
+    font-family: var(--font); transition: all .15s;
+  }
+  .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .tab-btn:hover:not(.active) { color: var(--text); }
   .inv-type-card {
     display: flex; flex-direction: column; align-items: center; justify-content: center;
     gap: 6px; padding: 16px 10px; border-radius: var(--radius);
@@ -517,21 +687,22 @@
       <span class="icon">🔒</span> Antivírus
       <span class="nav-badge" id="badge-antivirus">0</span>
     </button>
-    <div class="nav-label">Em breve</div>
-    <button class="nav-item" onclick="alert('Módulo de Anotações em desenvolvimento!')">
-      <span class="icon">📝</span> Anotações
-    </button>
-    <button class="nav-item" onclick="alert('Módulo de Relatórios em desenvolvimento!')">
+    <button class="nav-item" onclick="showPage('relatorios')">
       <span class="icon">📊</span> Relatórios
+    </button>
+    <button class="nav-item" onclick="showPage('base')">
+      <span class="icon">📚</span> Base de Conhecimento
+      <span class="nav-badge" id="badge-base">0</span>
     </button>
   </nav>
   <div class="sidebar-footer">
-    <div class="avatar">AD</div>
-    <div class="avatar-info">
-      <div class="avatar-name">Admin</div>
-      <div class="avatar-role">Administrador</div>
+    <div class="avatar" id="sidebar-avatar" style="cursor:pointer" onclick="showPage('configuracoes')" title="Configurações">AD</div>
+    <div class="avatar-info" style="cursor:pointer" onclick="showPage('configuracoes')">
+      <div class="avatar-name" id="sidebar-username">Admin</div>
+      <div class="avatar-role" id="sidebar-role">Administrador</div>
     </div>
-    <button onclick="logout()" title="Sair" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;padding:4px;border-radius:6px;margin-left:auto;flex-shrink:0" onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--muted)'">⏻</button>
+    <button onclick="showPage('configuracoes')" title="Configurações" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;padding:4px;border-radius:6px;flex-shrink:0" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--muted)'">⚙️</button>
+    <button onclick="logout()" title="Sair" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;padding:4px;border-radius:6px;flex-shrink:0" onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--muted)'">⏻</button>
   </div>
 </aside>
 
@@ -983,7 +1154,845 @@
     </div>
   </div>
 
+  <!-- RELATÓRIOS PAGE -->
+  <div class="content page" id="page-relatorios">
+    <div class="page-header">
+      <div>
+        <div class="page-title">Relatórios</div>
+        <div class="page-sub">Gere, personalize e agende relatórios automáticos</div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-ghost" onclick="showRelTab('agendamento')">📧 Agendamento</button>
+        <button class="btn btn-primary" onclick="showRelTab('modelos')">+ Novo relatório</button>
+      </div>
+    </div>
+
+    <!-- Abas -->
+    <div class="tab-bar">
+      <button class="tab-btn active" id="tab-modelos" onclick="showRelTab('modelos')">📋 Modelos prontos</button>
+      <button class="tab-btn" id="tab-personalizado" onclick="showRelTab('personalizado')">✏️ Personalizado</button>
+      <button class="tab-btn" id="tab-agendamento" onclick="showRelTab('agendamento')">📧 Agendamento de e-mail</button>
+    </div>
+
+    <!-- ABA: Modelos prontos -->
+    <div id="rel-tab-modelos">
+      <div class="rel-grid">
+        <div class="rel-card" onclick="gerarRelatorio('geral')">
+          <div class="rel-card-icon">📊</div>
+          <div class="rel-card-title">Relatório Geral</div>
+          <div class="rel-card-desc">Visão completa de clientes, ativos, usuários e inventário do sistema.</div>
+          <span class="rel-card-badge badge-blue">Completo</span>
+        </div>
+        <div class="rel-card" onclick="gerarRelatorio('clientes')">
+          <div class="rel-card-icon">👥</div>
+          <div class="rel-card-title">Relatório de Clientes</div>
+          <div class="rel-card-desc">Lista todos os clientes com status, segmento e totais de ativos e usuários.</div>
+          <span class="rel-card-badge badge-green">Clientes</span>
+        </div>
+        <div class="rel-card" onclick="gerarRelatorio('ativos')">
+          <div class="rel-card-icon">🖥</div>
+          <div class="rel-card-title">Relatório de Ativos</div>
+          <div class="rel-card-desc">Todos os equipamentos cadastrados com patrimônio, tipo, status e usuário responsável.</div>
+          <span class="rel-card-badge badge-blue">Ativos</span>
+        </div>
+        <div class="rel-card" onclick="gerarRelatorio('usuarios')">
+          <div class="rel-card-icon">🔑</div>
+          <div class="rel-card-title">Relatório de Usuários</div>
+          <div class="rel-card-desc">Lista de colaboradores com cargo, setor, gestor e equipamentos vinculados.</div>
+          <span class="rel-card-badge badge-amber">Usuários</span>
+        </div>
+        <div class="rel-card" onclick="gerarRelatorio('antivirus')">
+          <div class="rel-card-icon">🔒</div>
+          <div class="rel-card-title">Relatório de Antivírus</div>
+          <div class="rel-card-desc">Status de proteção de todos os colaboradores. Destaca não instalados e expirados.</div>
+          <span class="rel-card-badge badge-red">Segurança</span>
+        </div>
+        <div class="rel-card" onclick="gerarRelatorio('permissoes')">
+          <div class="rel-card-icon">🛡</div>
+          <div class="rel-card-title">Relatório de Permissões</div>
+          <div class="rel-card-desc">Permissões de pastas, grupos AD e acessos VPN por usuário e cliente.</div>
+          <span class="rel-card-badge badge-amber">Acesso</span>
+        </div>
+        <div class="rel-card" onclick="gerarRelatorio('vpn')">
+          <div class="rel-card-icon">🔐</div>
+          <div class="rel-card-title">Relatório de VPN</div>
+          <div class="rel-card-desc">Todos os usuários com VPN ativa, suspensa ou revogada com detalhes de instalação.</div>
+          <span class="rel-card-badge badge-green">VPN</span>
+        </div>
+        <div class="rel-card" onclick="gerarRelatorio('garantias')">
+          <div class="rel-card-icon">📅</div>
+          <div class="rel-card-title">Relatório de Garantias</div>
+          <div class="rel-card-desc">Ativos com garantia próxima do vencimento ou já vencida.</div>
+          <span class="rel-card-badge badge-amber">Garantias</span>
+        </div>
+        <div class="rel-card" onclick="gerarRelatorio('resumo_cliente')">
+          <div class="rel-card-icon">🏢</div>
+          <div class="rel-card-title">Resumo por Cliente</div>
+          <div class="rel-card-desc">Relatório individual por cliente com todos os ativos, usuários e status.</div>
+          <span class="rel-card-badge badge-blue">Por cliente</span>
+        </div>
+      </div>
+
+      <!-- Preview do relatório gerado -->
+      <div class="report-preview" id="report-preview" style="display:none">
+        <div class="report-toolbar">
+          <div class="report-title" id="report-preview-title">Relatório</div>
+          <select class="select-filter" id="report-filter-cliente" onchange="filtrarRelatorio()" style="width:200px">
+            <option value="">Todos os clientes</option>
+          </select>
+          <button class="btn btn-ghost" onclick="imprimirRelatorio()">🖨 Imprimir</button>
+          <button class="btn btn-primary" onclick="exportarCSV()">⬇ Exportar CSV</button>
+          <button class="btn btn-ghost" style="padding:8px 10px" onclick="document.getElementById('report-preview').style.display='none'">×</button>
+        </div>
+        <div class="report-body" id="report-body"></div>
+      </div>
+    </div>
+
+    <!-- ABA: Personalizado -->
+    <div id="rel-tab-personalizado" style="display:none">
+      <div class="card" style="max-width:700px">
+        <div class="card-header"><div class="card-title">✏️ Relatório personalizado</div></div>
+        <div class="card-body" style="display:flex;flex-direction:column;gap:16px">
+          <div class="form-group">
+            <label>Título do relatório</label>
+            <input type="text" id="rel-custom-titulo" placeholder="Ex: Relatório de TI - Janeiro 2025"/>
+          </div>
+          <div class="form-group">
+            <label>Filtrar por cliente</label>
+            <select id="rel-custom-cliente">
+              <option value="">Todos os clientes</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Selecione as seções para incluir</label>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px">
+              <label style="display:flex;align-items:center;gap:8px;color:var(--text);font-size:13px;cursor:pointer">
+                <input type="checkbox" id="rel-sec-clientes" checked/> 👥 Clientes
+              </label>
+              <label style="display:flex;align-items:center;gap:8px;color:var(--text);font-size:13px;cursor:pointer">
+                <input type="checkbox" id="rel-sec-ativos" checked/> 🖥 Ativos
+              </label>
+              <label style="display:flex;align-items:center;gap:8px;color:var(--text);font-size:13px;cursor:pointer">
+                <input type="checkbox" id="rel-sec-usuarios" checked/> 🔑 Usuários
+              </label>
+              <label style="display:flex;align-items:center;gap:8px;color:var(--text);font-size:13px;cursor:pointer">
+                <input type="checkbox" id="rel-sec-antivirus" checked/> 🔒 Antivírus
+              </label>
+              <label style="display:flex;align-items:center;gap:8px;color:var(--text);font-size:13px;cursor:pointer">
+                <input type="checkbox" id="rel-sec-permissoes" checked/> 🛡 Permissões
+              </label>
+              <label style="display:flex;align-items:center;gap:8px;color:var(--text);font-size:13px;cursor:pointer">
+                <input type="checkbox" id="rel-sec-vpn" checked/> 🔐 VPN
+              </label>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Período — De</label>
+              <input type="text" id="rel-periodo-de" placeholder="DD/MM/AAAA"/>
+            </div>
+            <div class="form-group">
+              <label>Período — Até</label>
+              <input type="text" id="rel-periodo-ate" placeholder="DD/MM/AAAA"/>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Observações / Cabeçalho do relatório</label>
+            <textarea id="rel-custom-obs" placeholder="Ex: Relatório preparado por MCRS para o cliente..."></textarea>
+          </div>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-primary" onclick="gerarRelatorioCustom()">📊 Gerar relatório</button>
+            <button class="btn btn-ghost" onclick="exportarCSVCustom()">⬇ Exportar CSV</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="report-preview" id="report-custom-preview" style="display:none;margin-top:20px">
+        <div class="report-toolbar">
+          <div class="report-title" id="report-custom-title">Relatório personalizado</div>
+          <button class="btn btn-ghost" onclick="imprimirRelatorioCustom()">🖨 Imprimir</button>
+          <button class="btn btn-ghost" style="padding:8px 10px" onclick="document.getElementById('report-custom-preview').style.display='none'">×</button>
+        </div>
+        <div class="report-body" id="report-custom-body"></div>
+      </div>
+    </div>
+
+    <!-- ABA: Agendamento de e-mail -->
+    <div id="rel-tab-agendamento" style="display:none">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;max-width:900px">
+        <!-- Config de envio -->
+        <div class="card">
+          <div class="card-header"><div class="card-title">📧 Configuração de envio</div></div>
+          <div class="card-body" style="display:flex;flex-direction:column;gap:14px">
+            <div class="form-group">
+              <label>E-mail de destino *</label>
+              <input type="email" id="email-destino" placeholder="Ex: gestor@empresa.com"/>
+            </div>
+            <div class="form-group">
+              <label>E-mail com cópia (CC)</label>
+              <input type="email" id="email-cc" placeholder="Ex: diretor@empresa.com"/>
+            </div>
+            <div class="form-group">
+              <label>Assunto do e-mail</label>
+              <input type="text" id="email-assunto" placeholder="Ex: Relatório mensal de TI - MCRS"/>
+            </div>
+            <div class="form-group">
+              <label>Tipo de relatório a enviar</label>
+              <select id="email-tipo-rel">
+                <option value="geral">📊 Relatório Geral</option>
+                <option value="clientes">👥 Relatório de Clientes</option>
+                <option value="ativos">🖥 Relatório de Ativos</option>
+                <option value="usuarios">🔑 Relatório de Usuários</option>
+                <option value="antivirus">🔒 Relatório de Antivírus</option>
+                <option value="permissoes">🛡 Relatório de Permissões</option>
+                <option value="vpn">🔐 Relatório de VPN</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Frequência de envio</label>
+              <select id="email-frequencia">
+                <option value="mensal">Mensal (todo dia 1º)</option>
+                <option value="quinzenal">Quinzenal (dias 1 e 15)</option>
+                <option value="semanal">Semanal (toda segunda-feira)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Mensagem adicional no e-mail</label>
+              <textarea id="email-mensagem" placeholder="Ex: Segue em anexo o relatório mensal de TI..." style="min-height:60px"></textarea>
+            </div>
+            <button class="btn btn-primary" onclick="salvarAgendamento()">💾 Salvar agendamento</button>
+          </div>
+        </div>
+
+        <!-- Agendamentos salvos -->
+        <div class="card">
+          <div class="card-header"><div class="card-title">📋 Agendamentos ativos</div></div>
+          <div class="card-body" id="agendamentos-lista">
+            <div class="empty">
+              <div class="empty-icon">📧</div>
+              <div class="empty-text">Nenhum agendamento configurado ainda.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Aviso sobre envio de e-mail -->
+      <div style="margin-top:20px;background:rgba(79,142,247,0.08);border:1px solid rgba(79,142,247,0.2);border-radius:10px;padding:16px 20px;max-width:900px">
+        <div style="font-size:13px;font-weight:600;color:var(--accent);margin-bottom:6px">ℹ️ Como funciona o envio de e-mail</div>
+        <div style="font-size:13px;color:var(--muted);line-height:1.6">
+          O sistema salva seus agendamentos e gera o relatório automaticamente. Para o envio real do e-mail, você precisará de um serviço como <strong style="color:var(--text)">EmailJS</strong> (gratuito até 200 e-mails/mês) ou <strong style="color:var(--text)">Resend</strong>. Após configurar, o botão <strong style="color:var(--text)">"Enviar agora"</strong> ficará disponível em cada agendamento.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONFIGURAÇÕES PAGE -->
+  <div class="content page" id="page-configuracoes">
+    <div class="page-header">
+      <div>
+        <div class="page-title">Configurações</div>
+        <div class="page-sub">Personalize o sistema, gerencie usuários e preferências</div>
+      </div>
+    </div>
+
+    <div class="config-grid">
+      <!-- Menu lateral -->
+      <div class="config-menu">
+        <button class="config-menu-item active" onclick="showConfigPanel('perfil', this)">👤 Meu perfil</button>
+        <button class="config-menu-item" onclick="showConfigPanel('sistema', this)">⚙️ Sistema</button>
+        <button class="config-menu-item" onclick="showConfigPanel('usuarios_sys', this)">👥 Usuários do sistema</button>
+        <button class="config-menu-item" onclick="showConfigPanel('aparencia', this)">🎨 Aparência</button>
+        <button class="config-menu-item" onclick="showConfigPanel('notificacoes', this)">🔔 Notificações</button>
+        <button class="config-menu-item" onclick="showConfigPanel('backup', this)">💾 Backup e dados</button>
+        <button class="config-menu-item" onclick="showConfigPanel('sobre', this)">ℹ️ Sobre</button>
+      </div>
+
+      <div>
+        <!-- PERFIL -->
+        <div class="config-panel active" id="config-perfil">
+          <div class="config-section">
+            <div class="config-section-header">
+              <div class="config-section-title">👤 Meu perfil</div>
+              <button class="btn btn-primary" style="font-size:12px;padding:6px 14px" onclick="salvarPerfil()">Salvar</button>
+            </div>
+            <div class="config-section-body">
+              <div style="display:flex;align-items:center;gap:16px;margin-bottom:8px">
+                <div class="avatar" id="config-avatar" style="width:56px;height:56px;font-size:20px;border-radius:14px">AD</div>
+                <div>
+                  <div style="font-size:14px;font-weight:600" id="config-nome-display">Administrador</div>
+                  <div style="font-size:12px;color:var(--muted)">Administrador do sistema</div>
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Nome completo</label>
+                  <input type="text" id="cfg-nome" placeholder="Seu nome"/>
+                </div>
+                <div class="form-group">
+                  <label>E-mail</label>
+                  <input type="email" id="cfg-email" placeholder="seu@email.com"/>
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Empresa / Marca</label>
+                  <input type="text" id="cfg-empresa" placeholder="Ex: MCRS Tecnologia"/>
+                </div>
+                <div class="form-group">
+                  <label>Telefone</label>
+                  <input type="text" id="cfg-tel" placeholder="(21) 99999-0000"/>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="config-section">
+            <div class="config-section-header">
+              <div class="config-section-title">🔑 Alterar senha</div>
+            </div>
+            <div class="config-section-body">
+              <div class="form-group">
+                <label>Senha atual</label>
+                <input type="password" id="cfg-senha-atual" placeholder="Digite a senha atual"/>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Nova senha</label>
+                  <input type="password" id="cfg-senha-nova" placeholder="Nova senha (mín. 8 caracteres)"/>
+                </div>
+                <div class="form-group">
+                  <label>Confirmar nova senha</label>
+                  <input type="password" id="cfg-senha-confirma" placeholder="Confirme a nova senha"/>
+                </div>
+              </div>
+              <button class="btn btn-ghost" onclick="alterarSenha()">🔒 Alterar senha</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- SISTEMA -->
+        <div class="config-panel" id="config-sistema">
+          <div class="config-section">
+            <div class="config-section-header">
+              <div class="config-section-title">⚙️ Configurações do sistema</div>
+              <button class="btn btn-primary" style="font-size:12px;padding:6px 14px" onclick="salvarSistema()">Salvar</button>
+            </div>
+            <div class="config-section-body">
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Nome do sistema</label>
+                  <input type="text" id="cfg-sys-nome" placeholder="IT Manager" value="IT Manager"/>
+                </div>
+                <div class="form-group">
+                  <label>Subtítulo</label>
+                  <input type="text" id="cfg-sys-sub" placeholder="Gestão de TI" value="Gestão de TI"/>
+                </div>
+              </div>
+              <div class="form-group">
+                <label>Fuso horário</label>
+                <select id="cfg-timezone">
+                  <option value="America/Sao_Paulo" selected>🇧🇷 Brasília (GMT-3)</option>
+                  <option value="America/Manaus">🇧🇷 Manaus (GMT-4)</option>
+                  <option value="America/Belem">🇧🇷 Belém (GMT-3)</option>
+                  <option value="America/Fortaleza">🇧🇷 Fortaleza (GMT-3)</option>
+                  <option value="Europe/Lisbon">🇵🇹 Lisboa (GMT+0)</option>
+                </select>
+              </div>
+              <div class="config-row">
+                <div class="config-row-info">
+                  <div class="config-row-label">Sessão automática</div>
+                  <div class="config-row-desc">Manter login por 8 horas antes de expirar</div>
+                </div>
+                <div class="toggle-switch on" id="toggle-sessao" onclick="toggleSwitch('toggle-sessao')"></div>
+              </div>
+              <div class="config-row">
+                <div class="config-row-info">
+                  <div class="config-row-label">Confirmação ao excluir</div>
+                  <div class="config-row-desc">Exibir caixa de confirmação antes de excluir registros</div>
+                </div>
+                <div class="toggle-switch on" id="toggle-confirmar" onclick="toggleSwitch('toggle-confirmar')"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- USUÁRIOS DO SISTEMA -->
+        <div class="config-panel" id="config-usuarios_sys">
+          <div class="config-section">
+            <div class="config-section-header">
+              <div class="config-section-title">👥 Usuários do sistema</div>
+              <button class="btn btn-primary" style="font-size:12px;padding:6px 14px" onclick="openSysUserModal()">+ Novo usuário</button>
+            </div>
+            <div class="config-section-body" id="sys-users-list">
+              <!-- Renderizado via JS -->
+            </div>
+          </div>
+
+          <div class="config-section">
+            <div class="config-section-header">
+              <div class="config-section-title">🔐 Permissões por perfil</div>
+            </div>
+            <div class="config-section-body">
+              <div style="overflow-x:auto">
+                <table style="width:100%;min-width:600px">
+                  <thead><tr>
+                    <th>Módulo</th>
+                    <th style="text-align:center">Administrador</th>
+                    <th style="text-align:center">Técnico</th>
+                    <th style="text-align:center">Visualizador</th>
+                  </tr></thead>
+                  <tbody>
+                    ${['Dashboard','Clientes','Ativos','Usuários','Permissões','Antivírus','Relatórios','Configurações'].map(m => `
+                    <tr>
+                      <td style="font-size:13px">${m}</td>
+                      <td style="text-align:center"><span style="color:var(--green)">✅ Total</span></td>
+                      <td style="text-align:center">${m==='Configurações'?'<span style="color:var(--red)">🚫</span>':m==='Relatórios'?'<span style="color:var(--amber)">👁 Leitura</span>':'<span style="color:var(--green)">✅ Total</span>'}</td>
+                      <td style="text-align:center">${m==='Configurações'||m==='Clientes'?'<span style="color:var(--red)">🚫</span>':'<span style="color:var(--amber)">👁 Leitura</span>'}</td>
+                    </tr>`).join('')}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- APARÊNCIA -->
+        <div class="config-panel" id="config-aparencia">
+          <div class="config-section">
+            <div class="config-section-header">
+              <div class="config-section-title">🎨 Aparência</div>
+              <button class="btn btn-primary" style="font-size:12px;padding:6px 14px" onclick="salvarAparencia()">Salvar</button>
+            </div>
+            <div class="config-section-body">
+              <div class="form-group">
+                <label>Cor de destaque</label>
+                <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:6px">
+                  ${[
+                    {cor:'#4f8ef7',nome:'Azul'},
+                    {cor:'#7c3aed',nome:'Roxo'},
+                    {cor:'#22c984',nome:'Verde'},
+                    {cor:'#f59e0b',nome:'Âmbar'},
+                    {cor:'#f4566a',nome:'Vermelho'},
+                    {cor:'#06b6d4',nome:'Ciano'},
+                    {cor:'#ec4899',nome:'Rosa'},
+                  ].map(c => `
+                    <div onclick="setAccentColor('${c.cor}')" title="${c.nome}"
+                      style="width:32px;height:32px;border-radius:50%;background:${c.cor};cursor:pointer;
+                      border:2px solid transparent;transition:all .2s"
+                      class="accent-opt" data-color="${c.cor}"></div>
+                  `).join('')}
+                </div>
+              </div>
+              <div class="config-row">
+                <div class="config-row-info">
+                  <div class="config-row-label">Modo compacto</div>
+                  <div class="config-row-desc">Reduz o espaçamento da interface para caber mais informações</div>
+                </div>
+                <div class="toggle-switch" id="toggle-compacto" onclick="toggleSwitch('toggle-compacto')"></div>
+              </div>
+              <div class="config-row">
+                <div class="config-row-info">
+                  <div class="config-row-label">Animações</div>
+                  <div class="config-row-desc">Habilitar transições e animações na interface</div>
+                </div>
+                <div class="toggle-switch on" id="toggle-animacoes" onclick="toggleSwitch('toggle-animacoes')"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- NOTIFICAÇÕES -->
+        <div class="config-panel" id="config-notificacoes">
+          <div class="config-section">
+            <div class="config-section-header">
+              <div class="config-section-title">🔔 Notificações</div>
+              <button class="btn btn-primary" style="font-size:12px;padding:6px 14px" onclick="showToast('✅ Notificações salvas!')">Salvar</button>
+            </div>
+            <div class="config-section-body">
+              <div class="config-row">
+                <div class="config-row-info">
+                  <div class="config-row-label">Alertas de antivírus expirado</div>
+                  <div class="config-row-desc">Notificar quando uma licença de antivírus estiver vencida</div>
+                </div>
+                <div class="toggle-switch on" id="toggle-av-alerta" onclick="toggleSwitch('toggle-av-alerta')"></div>
+              </div>
+              <div class="config-row">
+                <div class="config-row-info">
+                  <div class="config-row-label">Alertas de garantia próxima</div>
+                  <div class="config-row-desc">Notificar quando uma garantia estiver a 30 dias do vencimento</div>
+                </div>
+                <div class="toggle-switch on" id="toggle-garantia-alerta" onclick="toggleSwitch('toggle-garantia-alerta')"></div>
+              </div>
+              <div class="config-row">
+                <div class="config-row-info">
+                  <div class="config-row-label">Relatório mensal automático</div>
+                  <div class="config-row-desc">Gerar lembrete no primeiro dia de cada mês</div>
+                </div>
+                <div class="toggle-switch" id="toggle-rel-mensal" onclick="toggleSwitch('toggle-rel-mensal')"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- BACKUP -->
+        <div class="config-panel" id="config-backup">
+          <div class="config-section">
+            <div class="config-section-header">
+              <div class="config-section-title">💾 Backup e dados</div>
+            </div>
+            <div class="config-section-body">
+              <div class="config-row">
+                <div class="config-row-info">
+                  <div class="config-row-label">Exportar todos os dados</div>
+                  <div class="config-row-desc">Baixa um arquivo JSON com todos os dados do sistema</div>
+                </div>
+                <button class="btn btn-ghost" onclick="exportarDados()">⬇ Exportar JSON</button>
+              </div>
+              <div class="config-row">
+                <div class="config-row-info">
+                  <div class="config-row-label">Exportar tudo em CSV</div>
+                  <div class="config-row-desc">Exporta clientes, ativos e usuários em formato CSV</div>
+                </div>
+                <button class="btn btn-ghost" onclick="exportarTudoCSV()">⬇ Exportar CSV</button>
+              </div>
+              <div style="background:rgba(244,86,106,0.08);border:1px solid rgba(244,86,106,0.2);border-radius:10px;padding:16px 20px">
+                <div style="font-size:13px;font-weight:600;color:var(--red);margin-bottom:6px">⚠️ Zona de perigo</div>
+                <div style="font-size:13px;color:var(--muted);margin-bottom:12px">Estas ações são irreversíveis. Faça um backup antes de prosseguir.</div>
+                <button class="btn" style="background:rgba(244,86,106,0.15);color:var(--red);border:1px solid rgba(244,86,106,0.3)" onclick="limparDados()">🗑️ Limpar todos os dados locais</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SOBRE -->
+        <div class="config-panel" id="config-sobre">
+          <div class="config-section">
+            <div class="config-section-header">
+              <div class="config-section-title">ℹ️ Sobre o sistema</div>
+            </div>
+            <div class="config-section-body">
+              <div style="text-align:center;padding:20px 0">
+                <div style="width:64px;height:64px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:28px;margin:0 auto 16px">🖥</div>
+                <div style="font-size:22px;font-weight:700;letter-spacing:-0.5px" id="sobre-nome">IT Manager</div>
+                <div style="font-size:13px;color:var(--muted);margin-top:4px" id="sobre-empresa">Gestão de TI</div>
+                <div style="font-size:12px;color:var(--muted);margin-top:16px">Versão 1.0.0 · Desenvolvido por MCRS</div>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+                <div class="report-stat-box">
+                  <div class="report-stat-val" id="sobre-clientes">0</div>
+                  <div class="report-stat-lbl">Clientes</div>
+                </div>
+                <div class="report-stat-box">
+                  <div class="report-stat-val" id="sobre-ativos">0</div>
+                  <div class="report-stat-lbl">Ativos</div>
+                </div>
+                <div class="report-stat-box">
+                  <div class="report-stat-val" id="sobre-usuarios">0</div>
+                  <div class="report-stat-lbl">Usuários</div>
+                </div>
+                <div class="report-stat-box">
+                  <div class="report-stat-val" id="sobre-antivirus">0</div>
+                  <div class="report-stat-lbl">Registros AV</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+  <!-- BASE DE CONHECIMENTO PAGE -->
+  <div class="content page" id="page-base">
+    <div class="page-header">
+      <div>
+        <div class="page-title">Base de Conhecimento</div>
+        <div class="page-sub">Scripts, tutoriais e guias técnicos para sua equipe</div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <div class="topbar-search" style="width:240px">
+          <span style="color:var(--muted)">🔍</span>
+          <input type="text" id="base-search" placeholder="Buscar artigos..." oninput="buscarBase()"/>
+        </div>
+        <button class="btn btn-primary" onclick="openBaseModal()">+ Novo artigo</button>
+      </div>
+    </div>
+
+    <div class="base-grid">
+      <!-- Sidebar de categorias -->
+      <div class="base-sidebar">
+        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;padding:4px 4px 8px;font-weight:600">Categorias</div>
+
+        <div class="base-cat">
+          <div class="base-cat-header active" onclick="filtrarBaseCategoria('', this)">
+            <span>📚 Todos os artigos</span>
+            <span class="base-cat-count" id="base-count-todos">0</span>
+          </div>
+        </div>
+
+        <div class="base-cat">
+          <div class="base-cat-header" onclick="filtrarBaseCategoria('Script', this)">
+            <span>⌨️ Scripts</span>
+            <span class="base-cat-count" id="base-count-Script">0</span>
+          </div>
+        </div>
+
+        <div class="base-cat">
+          <div class="base-cat-header" onclick="filtrarBaseCategoria('Instalação', this)">
+            <span>💿 Instalação de programas</span>
+            <span class="base-cat-count" id="base-count-Instalação">0</span>
+          </div>
+        </div>
+
+        <div class="base-cat">
+          <div class="base-cat-header" onclick="filtrarBaseCategoria('Configuração', this)">
+            <span>⚙️ Configurações</span>
+            <span class="base-cat-count" id="base-count-Configuração">0</span>
+          </div>
+        </div>
+
+        <div class="base-cat">
+          <div class="base-cat-header" onclick="filtrarBaseCategoria('Rede', this)">
+            <span>🌐 Redes e infraestrutura</span>
+            <span class="base-cat-count" id="base-count-Rede">0</span>
+          </div>
+        </div>
+
+        <div class="base-cat">
+          <div class="base-cat-header" onclick="filtrarBaseCategoria('Segurança', this)">
+            <span>🔒 Segurança</span>
+            <span class="base-cat-count" id="base-count-Segurança">0</span>
+          </div>
+        </div>
+
+        <div class="base-cat">
+          <div class="base-cat-header" onclick="filtrarBaseCategoria('Windows', this)">
+            <span>🪟 Windows</span>
+            <span class="base-cat-count" id="base-count-Windows">0</span>
+          </div>
+        </div>
+
+        <div class="base-cat">
+          <div class="base-cat-header" onclick="filtrarBaseCategoria('Linux', this)">
+            <span>🐧 Linux</span>
+            <span class="base-cat-count" id="base-count-Linux">0</span>
+          </div>
+        </div>
+
+        <div class="base-cat">
+          <div class="base-cat-header" onclick="filtrarBaseCategoria('Hardware', this)">
+            <span>🖥 Hardware</span>
+            <span class="base-cat-count" id="base-count-Hardware">0</span>
+          </div>
+        </div>
+
+        <div class="base-cat">
+          <div class="base-cat-header" onclick="filtrarBaseCategoria('Outros', this)">
+            <span>📦 Outros</span>
+            <span class="base-cat-count" id="base-count-Outros">0</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Conteúdo principal -->
+      <div>
+        <!-- Lista de artigos -->
+        <div id="base-lista-wrapper">
+          <div class="ativos-table-wrap">
+            <table>
+              <thead><tr>
+                <th style="padding-left:20px">Título</th>
+                <th>Categoria</th>
+                <th>Nível</th>
+                <th>Tags</th>
+                <th>Atualizado</th>
+                <th></th>
+              </tr></thead>
+              <tbody id="base-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Visualização de artigo -->
+        <div id="base-artigo-wrapper" style="display:none">
+          <div class="base-content">
+            <div class="base-content-header">
+              <div style="flex:1">
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+                  <button class="btn btn-ghost" style="font-size:12px;padding:5px 10px" onclick="voltarLista()">← Voltar</button>
+                  <span id="artigo-categoria-badge"></span>
+                  <span id="artigo-nivel-badge"></span>
+                </div>
+                <div style="font-size:20px;font-weight:700;letter-spacing:-0.5px" id="artigo-titulo"></div>
+                <div style="font-size:12px;color:var(--muted);margin-top:6px" id="artigo-meta"></div>
+                <div style="margin-top:8px" id="artigo-tags"></div>
+              </div>
+              <div style="display:flex;gap:8px;flex-shrink:0">
+                <button class="btn btn-ghost" style="font-size:12px;padding:6px 12px" id="artigo-edit-btn">✏️ Editar</button>
+                <button class="btn btn-ghost" style="font-size:12px;padding:6px 12px" onclick="imprimirArtigo()">🖨 Imprimir</button>
+              </div>
+            </div>
+            <div class="base-content-body" id="artigo-body"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
 </div><!-- end .main -->
+
+<!-- MODAL BASE DE CONHECIMENTO -->
+<div class="modal-overlay" id="base-modal-overlay" onclick="if(event.target===this)closeBaseModal()">
+  <div class="modal" style="width:680px;max-width:97vw;max-height:95vh;display:flex;flex-direction:column;">
+    <div class="modal-header">
+      <div class="modal-title" id="base-modal-title">Novo artigo</div>
+      <button class="modal-close" onclick="closeBaseModal()">×</button>
+    </div>
+    <div class="modal-body-scroll">
+
+      <div class="modal-section-title">Identificação</div>
+      <div class="form-group">
+        <label>Título do artigo *</label>
+        <input type="text" id="b-titulo" placeholder="Ex: Como instalar o Windows 11 do zero"/>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Categoria *</label>
+          <select id="b-categoria">
+            <option value="">Selecionar...</option>
+            <option value="Script">⌨️ Script</option>
+            <option value="Instalação">💿 Instalação de programas</option>
+            <option value="Configuração">⚙️ Configuração</option>
+            <option value="Rede">🌐 Rede e infraestrutura</option>
+            <option value="Segurança">🔒 Segurança</option>
+            <option value="Windows">🪟 Windows</option>
+            <option value="Linux">🐧 Linux</option>
+            <option value="Hardware">🖥 Hardware</option>
+            <option value="Outros">📦 Outros</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Nível de dificuldade</label>
+          <select id="b-nivel">
+            <option value="basico">🟢 Básico</option>
+            <option value="intermediario">🟡 Intermediário</option>
+            <option value="avancado">🔴 Avançado</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Tags (Enter para adicionar)</label>
+        <div class="chip-input-wrap" id="base-tags-wrap">
+          <input class="chip-text-input" id="b-tag-input" placeholder="Ex: Windows, driver, rede..." onkeydown="addBaseTag(event)"/>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Descrição breve</label>
+        <input type="text" id="b-descricao" placeholder="Resumo do que este artigo explica..."/>
+      </div>
+
+      <div class="modal-section-title" style="margin-top:4px">Conteúdo</div>
+
+      <div class="form-group">
+        <label>Tipo de conteúdo</label>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px">
+          <button type="button" class="btn btn-ghost" style="font-size:12px" onclick="inserirBloco('passo')">+ Passo a passo</button>
+          <button type="button" class="btn btn-ghost" style="font-size:12px" onclick="inserirBloco('script')">+ Bloco de script</button>
+          <button type="button" class="btn btn-ghost" style="font-size:12px" onclick="inserirBloco('aviso')">+ Aviso / Dica</button>
+          <button type="button" class="btn btn-ghost" style="font-size:12px" onclick="inserirBloco('secao')">+ Nova seção</button>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Conteúdo do artigo *</label>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:6px">
+          Use os botões acima para inserir blocos prontos. Você pode editar livremente o texto abaixo.
+        </div>
+        <textarea id="b-conteudo" placeholder="Escreva o conteúdo do artigo aqui..." style="min-height:280px;font-family:var(--mono);font-size:13px;line-height:1.6"></textarea>
+      </div>
+
+      <div class="form-group">
+        <label>Sistemas operacionais compatíveis</label>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:6px">
+          <label class="perm-check"><input type="checkbox" id="b-os-win" value="Windows"/> 🪟 Windows</label>
+          <label class="perm-check"><input type="checkbox" id="b-os-linux" value="Linux"/> 🐧 Linux</label>
+          <label class="perm-check"><input type="checkbox" id="b-os-mac" value="macOS"/> 🍎 macOS</label>
+          <label class="perm-check"><input type="checkbox" id="b-os-android" value="Android"/> 🤖 Android</label>
+          <label class="perm-check"><input type="checkbox" id="b-os-ios" value="iOS"/> 📱 iOS</label>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Autor / Responsável</label>
+        <input type="text" id="b-autor" placeholder="Ex: João TI / Equipe MCRS"/>
+      </div>
+
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeBaseModal()">Cancelar</button>
+      <button class="btn btn-primary" id="base-save-btn" onclick="saveBase()">Publicar artigo</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL USUÁRIO DO SISTEMA -->
+<div class="modal-overlay" id="sysuser-modal-overlay" onclick="if(event.target===this)closeSysUserModal()">
+  <div class="modal" style="width:500px;max-width:97vw">
+    <div class="modal-header">
+      <div class="modal-title" id="sysuser-modal-title">Novo usuário do sistema</div>
+      <button class="modal-close" onclick="closeSysUserModal()">×</button>
+    </div>
+    <div class="modal-body" style="display:flex;flex-direction:column;gap:16px">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Nome completo *</label>
+          <input type="text" id="su-nome" placeholder="Ex: João Silva"/>
+        </div>
+        <div class="form-group">
+          <label>Login *</label>
+          <input type="text" id="su-login" placeholder="Ex: joao.silva"/>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>E-mail *</label>
+        <input type="email" id="su-email" placeholder="joao@empresa.com"/>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Senha *</label>
+          <input type="password" id="su-senha" placeholder="Mínimo 8 caracteres"/>
+        </div>
+        <div class="form-group">
+          <label>Perfil de acesso *</label>
+          <select id="su-perfil">
+            <option value="admin">🔴 Administrador — acesso total</option>
+            <option value="tecnico">🟡 Técnico — acesso completo exceto config</option>
+            <option value="visualizador">🟢 Visualizador — somente leitura</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Módulos liberados (personalizado)</label>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px" id="su-modulos">
+          ${['Dashboard','Clientes','Ativos','Usuários','Permissões','Antivírus','Relatórios','Configurações'].map(m =>
+            `<label class="perm-check"><input type="checkbox" value="${m}" checked/> ${m}</label>`
+          ).join('')}
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Status</label>
+        <select id="su-status">
+          <option value="ativo">Ativo</option>
+          <option value="inativo">Inativo</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeSysUserModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveSysUser()">Salvar usuário</button>
+    </div>
+  </div>
+</div>
 
 <!-- MODAL ANTIVÍRUS -->
 <div class="modal-overlay" id="av-modal-overlay" onclick="closeAvModalOutside(event)">
@@ -1779,7 +2788,7 @@
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
     document.getElementById('page-' + id).classList.add('active');
-    const labels = { dashboard:'Dashboard', clientes:'Clientes', ativos:'Ativos', usuarios:'Usuários', permissoes:'Permissões', antivirus:'Antivírus' };
+    const labels = { dashboard:'Dashboard', clientes:'Clientes', ativos:'Ativos', usuarios:'Usuários', permissoes:'Permissões', antivirus:'Antivírus', relatorios:'Relatórios', base:'Base de Conhecimento', configuracoes:'Configurações' };
     document.getElementById('topbar-title').textContent = labels[id] || id;
     const nav = [...document.querySelectorAll('.nav-item')].find(n => n.textContent.trim().toLowerCase().startsWith(id.substring(0,4)));
     if (nav) nav.classList.add('active');
@@ -1789,6 +2798,14 @@
     if (id === 'usuarios') { populateUserSelects(); renderUsuarios(); }
     if (id === 'permissoes') { populatePermSelects(); renderPermissoes(); }
     if (id === 'antivirus') { populateAvSelects(); renderAntivirus(); }
+    if (id === 'relatorios') {
+      showRelTab('modelos');
+      const fc = document.getElementById('report-filter-cliente');
+      if (fc) fc.innerHTML = '<option value="">Todos os clientes</option>'
+        + clients.map(c => `<option value="${c.id}">${c.nome}</option>`).join('');
+    }
+    if (id === 'base') { voltarLista(); renderBase(); }
+    if (id === 'configuracoes') { showConfigPanel('perfil', document.querySelector('.config-menu-item')); }
   }
 
   function renderDashboard() {
@@ -2105,6 +3122,1017 @@
     if (el) el.textContent = ativos.length;
   }
   // ── FIM ATIVOS ───────────────────────────────────────────
+
+  // ── BASE DE CONHECIMENTO ──────────────────────────────────
+  let baseArtigos = [];
+  let editingBaseId = null;
+  let baseTags = [];
+  let baseCategoriaAtiva = '';
+  let baseArtigoAtivo = null;
+
+  const CAT_ICONS = {
+    Script:'⌨️', Instalação:'💿', Configuração:'⚙️', Rede:'🌐',
+    Segurança:'🔒', Windows:'🪟', Linux:'🐧', Hardware:'🖥', Outros:'📦'
+  };
+  const NIVEL_INFO = {
+    basico:        { label:'Básico',        cls:'nivel-basico' },
+    intermediario: { label:'Intermediário', cls:'nivel-intermediario' },
+    avancado:      { label:'Avançado',      cls:'nivel-avancado' },
+  };
+
+  const BLOCOS = {
+    passo:  `## Passo a passo\n[PASSO 1] Descrição do primeiro passo\n[PASSO 2] Descrição do segundo passo\n[PASSO 3] Descrição do terceiro passo\n`,
+    script: `[SCRIPT]\nCole seu script aqui\n[/SCRIPT]\n`,
+    aviso:  `[AVISO] ⚠️ Atenção: descreva o aviso ou dica aqui\n`,
+    secao:  `\n## Nova seção\n`,
+  };
+
+  function inserirBloco(tipo) {
+    const ta = document.getElementById('b-conteudo');
+    const pos = ta.selectionStart;
+    const val = ta.value;
+    ta.value = val.slice(0, pos) + BLOCOS[tipo] + val.slice(pos);
+    ta.focus();
+    showToast('✅ Bloco inserido!');
+  }
+
+  function addBaseTag(e) {
+    if (e.key !== 'Enter' && e.key !== ',') return;
+    e.preventDefault();
+    const val = document.getElementById('b-tag-input').value.trim();
+    if (!val || baseTags.includes(val)) { document.getElementById('b-tag-input').value = ''; return; }
+    baseTags.push(val);
+    document.getElementById('b-tag-input').value = '';
+    renderBaseTags();
+  }
+
+  function removeBaseTag(val) {
+    baseTags = baseTags.filter(t => t !== val);
+    renderBaseTags();
+  }
+
+  function renderBaseTags() {
+    const wrap = document.getElementById('base-tags-wrap');
+    const inp  = document.getElementById('b-tag-input');
+    if (!wrap) return;
+    [...wrap.querySelectorAll('.chip')].forEach(c => c.remove());
+    baseTags.forEach(val => {
+      const chip = document.createElement('span');
+      chip.className = 'chip';
+      chip.innerHTML = `${val}<span class="chip-remove" onclick="removeBaseTag('${val}')">×</span>`;
+      wrap.insertBefore(chip, inp);
+    });
+  }
+
+  function renderContadores() {
+    const cats = ['Script','Instalação','Configuração','Rede','Segurança','Windows','Linux','Hardware','Outros'];
+    const total = document.getElementById('base-count-todos');
+    if (total) total.textContent = baseArtigos.length;
+    cats.forEach(cat => {
+      const el = document.getElementById('base-count-' + cat);
+      if (el) el.textContent = baseArtigos.filter(a => a.categoria === cat).length;
+    });
+  }
+
+  function renderBase() {
+    renderContadores();
+    const tbody = document.getElementById('base-tbody');
+    if (!tbody) return;
+
+    const search = (document.getElementById('base-search')?.value || '').toLowerCase();
+    let list = baseArtigos.filter(a => {
+      if (baseCategoriaAtiva && a.categoria !== baseCategoriaAtiva) return false;
+      if (search && !a.titulo.toLowerCase().includes(search)
+        && !a.descricao?.toLowerCase().includes(search)
+        && !(a.tags||[]).join(' ').toLowerCase().includes(search)) return false;
+      return true;
+    });
+
+    if (!list.length) {
+      tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:40px">
+        ${baseArtigos.length ? 'Nenhum artigo encontrado.' : 'Nenhum artigo cadastrado. Clique em <strong>+ Novo artigo</strong>.'}
+      </td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = list.map(a => {
+      const nivel = NIVEL_INFO[a.nivel] || NIVEL_INFO.basico;
+      return `<tr style="cursor:pointer" onclick="abrirArtigo(${a.id})">
+        <td style="padding-left:20px">
+          <div style="font-weight:500;font-size:13px">${a.titulo}</div>
+          <div style="color:var(--muted);font-size:11px;margin-top:2px">${a.descricao||''}</div>
+        </td>
+        <td><span style="font-size:13px">${CAT_ICONS[a.categoria]||'📦'} ${a.categoria||'—'}</span></td>
+        <td><span class="nivel-badge ${nivel.cls}">${nivel.label}</span></td>
+        <td>
+          <div style="display:flex;flex-wrap:wrap;gap:3px">
+            ${(a.tags||[]).slice(0,3).map(t=>`<span class="base-tag">${t}</span>`).join('')}
+            ${(a.tags||[]).length > 3 ? `<span class="base-tag">+${a.tags.length-3}</span>` : ''}
+          </div>
+        </td>
+        <td style="font-size:12px;color:var(--muted)">${a.atualizadoEm||a.criadoEm||'—'}</td>
+        <td onclick="event.stopPropagation()">
+          <button class="action-btn" onclick="openBaseModal(${a.id})">✏️</button>
+          <button class="action-btn" onclick="deleteBase(${a.id})">🗑️</button>
+        </td>
+      </tr>`;
+    }).join('');
+  }
+
+  function buscarBase() { renderBase(); }
+
+  function filtrarBaseCategoria(cat, btn) {
+    baseCategoriaAtiva = cat;
+    document.querySelectorAll('.base-cat-header').forEach(b => b.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+    voltarLista();
+    renderBase();
+  }
+
+  function abrirArtigo(id) {
+    const a = baseArtigos.find(x => x.id === id);
+    if (!a) return;
+    baseArtigoAtivo = a;
+
+    document.getElementById('base-lista-wrapper').style.display = 'none';
+    document.getElementById('base-artigo-wrapper').style.display = 'block';
+
+    const nivel = NIVEL_INFO[a.nivel] || NIVEL_INFO.basico;
+    document.getElementById('artigo-titulo').textContent = a.titulo;
+    document.getElementById('artigo-meta').textContent =
+      `${a.autor ? 'Por ' + a.autor + ' · ' : ''}${a.criadoEm||''} ${a.atualizadoEm && a.atualizadoEm !== a.criadoEm ? '· Atualizado em ' + a.atualizadoEm : ''}`;
+    document.getElementById('artigo-categoria-badge').innerHTML =
+      `<span class="badge badge-blue">${CAT_ICONS[a.categoria]||''} ${a.categoria||''}</span>`;
+    document.getElementById('artigo-nivel-badge').innerHTML =
+      `<span class="nivel-badge ${nivel.cls}">${nivel.label}</span>`;
+    document.getElementById('artigo-tags').innerHTML =
+      (a.tags||[]).map(t=>`<span class="base-tag">${t}</span>`).join('');
+    document.getElementById('artigo-edit-btn').onclick = () => openBaseModal(a.id);
+
+    // Renderiza o conteúdo com formatação
+    document.getElementById('artigo-body').innerHTML = renderConteudo(a.conteudo||'', a.os||[]);
+  }
+
+  function renderConteudo(texto, os) {
+    let html = '';
+
+    // OS compatíveis
+    if (os && os.length) {
+      html += `<div style="margin-bottom:20px">
+        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;font-weight:600">Compatível com</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">${os.map(o=>`<span class="base-tag">${o}</span>`).join('')}</div>
+      </div>`;
+    }
+
+    // Processa o conteúdo linha por linha
+    const linhas = texto.split('\n');
+    let dentroScript = false;
+    let scriptBuffer = [];
+    let dentroPassos = false;
+    let passos = [];
+
+    const flushPassos = () => {
+      if (passos.length) {
+        html += `<ol class="step-list">${passos.map(p=>`<li>${p}</li>`).join('')}</ol>`;
+        passos = [];
+        dentroPassos = false;
+      }
+    };
+    const flushScript = () => {
+      if (scriptBuffer.length) {
+        html += `<div class="code-block"><button class="copy-btn" onclick="copiarScript(this)">📋 Copiar</button>${scriptBuffer.join('\n')}</div>`;
+        scriptBuffer = [];
+        dentroScript = false;
+      }
+    };
+
+    linhas.forEach(linha => {
+      if (linha.trim() === '[SCRIPT]') { dentroScript = true; flushPassos(); return; }
+      if (linha.trim() === '[/SCRIPT]') { flushScript(); return; }
+      if (dentroScript) { scriptBuffer.push(linha); return; }
+
+      if (linha.startsWith('[PASSO')) {
+        dentroPassos = true;
+        const conteudoPasso = linha.replace(/^\[PASSO\s*\d*\]\s*/, '');
+        passos.push(conteudoPasso);
+        return;
+      }
+
+      if (dentroPassos && !linha.startsWith('[PASSO')) flushPassos();
+
+      if (linha.startsWith('[AVISO]')) {
+        html += `<div style="background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.25);border-radius:8px;padding:12px 16px;margin:12px 0;font-size:13px">${linha.replace('[AVISO]','').trim()}</div>`;
+        return;
+      }
+
+      if (linha.startsWith('## ')) {
+        html += `<div style="font-size:15px;font-weight:700;margin:20px 0 10px;letter-spacing:-0.3px">${linha.replace('## ','')}</div>`;
+        return;
+      }
+
+      if (linha.startsWith('# ')) {
+        html += `<div style="font-size:18px;font-weight:700;margin:24px 0 12px;letter-spacing:-0.5px">${linha.replace('# ','')}</div>`;
+        return;
+      }
+
+      if (linha.trim() === '') { html += '<br/>'; return; }
+
+      // Texto normal com suporte a **negrito** e `código`
+      let l = linha
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        .replace(/`(.*?)`/g, `<code style="background:var(--surface2);border-radius:4px;padding:1px 6px;font-family:var(--mono);font-size:12px">$1</code>`);
+      html += `<p style="font-size:13.5px;line-height:1.7;margin:4px 0">${l}</p>`;
+    });
+
+    flushPassos();
+    flushScript();
+    return html;
+  }
+
+  function copiarScript(btn) {
+    const bloco = btn.parentElement;
+    const texto = [...bloco.childNodes]
+      .filter(n => n.nodeType === 3)
+      .map(n => n.textContent).join('').trim()
+      || bloco.innerText.replace('📋 Copiar','').trim();
+    navigator.clipboard.writeText(texto).then(() => {
+      btn.textContent = '✅ Copiado!';
+      setTimeout(() => btn.textContent = '📋 Copiar', 2000);
+    });
+  }
+
+  function voltarLista() {
+    document.getElementById('base-lista-wrapper').style.display = 'block';
+    document.getElementById('base-artigo-wrapper').style.display = 'none';
+    baseArtigoAtivo = null;
+  }
+
+  function imprimirArtigo() {
+    if (!baseArtigoAtivo) return;
+    const conteudo = document.getElementById('artigo-body').innerHTML;
+    const w = window.open('', '_blank');
+    w.document.write(`<!DOCTYPE html><html><head><title>${baseArtigoAtivo.titulo}</title>
+    <style>
+      body { font-family: Arial, sans-serif; font-size: 13px; color: #333; padding: 32px; max-width: 800px; margin: 0 auto; }
+      h1 { font-size: 22px; margin-bottom: 4px; }
+      .code-block { background: #f5f5f5; border: 1px solid #ddd; border-radius: 6px; padding: 14px; font-family: monospace; font-size: 12px; white-space: pre-wrap; margin: 12px 0; }
+      .step-list { padding-left: 0; list-style: none; counter-reset: steps; }
+      .step-list li { counter-increment: steps; padding: 8px 8px 8px 40px; position: relative; border-left: 2px solid #ddd; margin: 0 0 6px 12px; }
+      .step-list li::before { content: counter(steps); position: absolute; left: -12px; top: 6px; width: 20px; height: 20px; border-radius: 50%; background: #4f8ef7; color: #fff; font-size: 10px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+      @media print { body { padding: 0; } }
+    </style></head><body>
+    <h1>${baseArtigoAtivo.titulo}</h1>
+    <p style="color:#999;font-size:11px">${baseArtigoAtivo.categoria} · ${NIVEL_INFO[baseArtigoAtivo.nivel]?.label||''} · ${baseArtigoAtivo.criadoEm||''}</p>
+    <hr style="margin:12px 0;border:none;border-top:1px solid #eee"/>
+    ${conteudo}
+    </body></html>`);
+    w.document.close();
+    w.print();
+  }
+
+  function openBaseModal(id) {
+    editingBaseId = id || null;
+    baseTags = [];
+    document.getElementById('base-modal-title').textContent = id ? 'Editar artigo' : 'Novo artigo';
+    document.getElementById('base-save-btn').textContent = id ? 'Salvar alterações' : 'Publicar artigo';
+
+    ['b-titulo','b-descricao','b-conteudo','b-autor'].forEach(f => { const el = document.getElementById(f); if(el) el.value=''; });
+    document.getElementById('b-categoria').value = '';
+    document.getElementById('b-nivel').value = 'basico';
+    ['b-os-win','b-os-linux','b-os-mac','b-os-android','b-os-ios'].forEach(id => {
+      const el = document.getElementById(id); if(el) el.checked = false;
+    });
+    renderBaseTags();
+
+    if (id) {
+      const a = baseArtigos.find(x => x.id === id);
+      if (a) {
+        document.getElementById('b-titulo').value = a.titulo||'';
+        document.getElementById('b-descricao').value = a.descricao||'';
+        document.getElementById('b-categoria').value = a.categoria||'';
+        document.getElementById('b-nivel').value = a.nivel||'basico';
+        document.getElementById('b-conteudo').value = a.conteudo||'';
+        document.getElementById('b-autor').value = a.autor||'';
+        baseTags = [...(a.tags||[])];
+        renderBaseTags();
+        (a.os||[]).forEach(os => {
+          const map = { Windows:'b-os-win', Linux:'b-os-linux', macOS:'b-os-mac', Android:'b-os-android', iOS:'b-os-ios' };
+          const el = document.getElementById(map[os]);
+          if (el) el.checked = true;
+        });
+      }
+    }
+    document.getElementById('base-modal-overlay').classList.add('open');
+    document.getElementById('b-titulo').focus();
+  }
+
+  function closeBaseModal() {
+    document.getElementById('base-modal-overlay').classList.remove('open');
+    editingBaseId = null;
+  }
+
+  function saveBase() {
+    const titulo    = document.getElementById('b-titulo').value.trim();
+    const categoria = document.getElementById('b-categoria').value;
+    const conteudo  = document.getElementById('b-conteudo').value.trim();
+    if (!titulo)    { document.getElementById('b-titulo').focus(); showToast('⚠️ Informe o título.'); return; }
+    if (!categoria) { showToast('⚠️ Selecione a categoria.'); return; }
+    if (!conteudo)  { document.getElementById('b-conteudo').focus(); showToast('⚠️ Adicione o conteúdo.'); return; }
+
+    const os = [];
+    const osMap = { 'b-os-win':'Windows', 'b-os-linux':'Linux', 'b-os-mac':'macOS', 'b-os-android':'Android', 'b-os-ios':'iOS' };
+    Object.entries(osMap).forEach(([id, val]) => { if(document.getElementById(id)?.checked) os.push(val); });
+
+    const now = new Date().toLocaleDateString('pt-BR');
+    const artigo = {
+      id: editingBaseId || Date.now(),
+      titulo, categoria, conteudo,
+      nivel:      document.getElementById('b-nivel').value,
+      descricao:  document.getElementById('b-descricao').value.trim(),
+      autor:      document.getElementById('b-autor').value.trim(),
+      tags:       [...baseTags],
+      os,
+      criadoEm:   editingBaseId ? (baseArtigos.find(x=>x.id===editingBaseId)?.criadoEm || now) : now,
+      atualizadoEm: now,
+    };
+
+    if (editingBaseId) {
+      baseArtigos = baseArtigos.map(a => a.id === editingBaseId ? artigo : a);
+      showToast('✅ Artigo atualizado!');
+      if (baseArtigoAtivo?.id === editingBaseId) abrirArtigo(artigo.id);
+    } else {
+      baseArtigos.push(artigo);
+      showToast('✅ Artigo publicado!');
+    }
+    closeBaseModal();
+    renderBase();
+    updateBaseBadge();
+  }
+
+  function deleteBase(id) {
+    const a = baseArtigos.find(x => x.id === id);
+    if (!a || !confirm(`Excluir o artigo "${a.titulo}"?`)) return;
+    baseArtigos = baseArtigos.filter(x => x.id !== id);
+    if (baseArtigoAtivo?.id === id) voltarLista();
+    renderBase();
+    updateBaseBadge();
+    showToast('🗑️ Artigo removido.');
+  }
+
+  function updateBaseBadge() {
+    const el = document.getElementById('badge-base');
+    if (el) el.textContent = baseArtigos.length;
+  }
+  // ── FIM BASE DE CONHECIMENTO ──────────────────────────────
+
+  // ── CONFIGURAÇÕES ─────────────────────────────────────────
+  let sysUsers = [];
+  let editingSysUserId = null;
+  let cfgPrefs = {};
+
+  function showConfigPanel(panel, btn) {
+    document.querySelectorAll('.config-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.config-menu-item').forEach(b => b.classList.remove('active'));
+    const el = document.getElementById('config-' + panel);
+    if (el) el.classList.add('active');
+    if (btn) btn.classList.add('active');
+    if (panel === 'sobre') atualizarSobre();
+    if (panel === 'usuarios_sys') renderSysUsers();
+    if (panel === 'perfil') carregarPerfil();
+  }
+
+  function toggleSwitch(id) {
+    const el = document.getElementById(id);
+    if (el) el.classList.toggle('on');
+  }
+
+  function setAccentColor(cor) {
+    document.documentElement.style.setProperty('--accent', cor);
+    document.querySelectorAll('.accent-opt').forEach(el => {
+      el.style.border = el.dataset.color === cor ? '3px solid #fff' : '2px solid transparent';
+    });
+    cfgPrefs.accentColor = cor;
+    showToast('🎨 Cor aplicada!');
+  }
+
+  function salvarPerfil() {
+    const nome = document.getElementById('cfg-nome').value.trim();
+    const empresa = document.getElementById('cfg-empresa').value.trim();
+    if (nome) {
+      document.getElementById('sidebar-username').textContent = nome;
+      document.getElementById('config-nome-display').textContent = nome;
+      const ini = nome.split(' ').slice(0,2).map(w=>w[0]).join('').toUpperCase();
+      document.getElementById('sidebar-avatar').textContent = ini;
+      document.getElementById('config-avatar').textContent = ini;
+    }
+    if (empresa) {
+      document.getElementById('sobre-empresa').textContent = empresa;
+    }
+    cfgPrefs.nome = nome;
+    cfgPrefs.email = document.getElementById('cfg-email').value.trim();
+    cfgPrefs.empresa = empresa;
+    cfgPrefs.tel = document.getElementById('cfg-tel').value.trim();
+    showToast('✅ Perfil salvo!');
+  }
+
+  function carregarPerfil() {
+    if (cfgPrefs.nome) document.getElementById('cfg-nome').value = cfgPrefs.nome;
+    if (cfgPrefs.email) document.getElementById('cfg-email').value = cfgPrefs.email;
+    if (cfgPrefs.empresa) document.getElementById('cfg-empresa').value = cfgPrefs.empresa;
+    if (cfgPrefs.tel) document.getElementById('cfg-tel').value = cfgPrefs.tel;
+  }
+
+  function alterarSenha() {
+    const atual = document.getElementById('cfg-senha-atual').value;
+    const nova  = document.getElementById('cfg-senha-nova').value;
+    const conf  = document.getElementById('cfg-senha-confirma').value;
+    if (!atual) { showToast('⚠️ Informe a senha atual.'); return; }
+    if (nova.length < 8) { showToast('⚠️ A nova senha deve ter ao menos 8 caracteres.'); return; }
+    if (nova !== conf) { showToast('⚠️ As senhas não coincidem.'); return; }
+    showToast('✅ Senha alterada! Atualize também no Railway.');
+    ['cfg-senha-atual','cfg-senha-nova','cfg-senha-confirma'].forEach(id => document.getElementById(id).value = '');
+  }
+
+  function salvarSistema() {
+    const nome = document.getElementById('cfg-sys-nome').value.trim();
+    const sub  = document.getElementById('cfg-sys-sub').value.trim();
+    if (nome) {
+      document.querySelector('.logo-text').textContent = nome;
+      document.querySelector('.logo-sub').textContent = sub;
+      document.title = nome;
+    }
+    showToast('✅ Configurações do sistema salvas!');
+  }
+
+  function salvarAparencia() {
+    showToast('✅ Aparência salva!');
+  }
+
+  function atualizarSobre() {
+    const n = document.getElementById('cfg-sys-nome');
+    if (n) document.getElementById('sobre-nome').textContent = n.value || 'IT Manager';
+    document.getElementById('sobre-clientes').textContent = clients.length;
+    document.getElementById('sobre-ativos').textContent = ativos.length;
+    document.getElementById('sobre-usuarios').textContent = usuarios.length;
+    document.getElementById('sobre-antivirus').textContent = antivirus.length;
+  }
+
+  // Usuários do sistema
+  function renderSysUsers() {
+    const el = document.getElementById('sys-users-list');
+    if (!el) return;
+
+    // Sempre mostra o admin principal
+    const todos = [
+      { id: 0, nome: 'Administrador', login: 'admin', email: '', perfil: 'admin', status: 'ativo', fixo: true },
+      ...sysUsers
+    ];
+
+    el.innerHTML = todos.map(u => `
+      <div class="sys-user-card">
+        <div class="user-avatar" style="background:${u.perfil==='admin'?'var(--accent)':u.perfil==='tecnico'?'var(--amber)':'var(--green)'};width:40px;height:40px;font-size:14px">
+          ${u.nome.split(' ').slice(0,2).map(w=>w[0]).join('').toUpperCase()}
+        </div>
+        <div style="flex:1">
+          <div style="font-size:13.5px;font-weight:600">${u.nome} ${u.fixo?'<span style="font-size:10px;color:var(--muted)">(você)</span>':''}</div>
+          <div style="font-size:12px;color:var(--muted)">@${u.login} · ${u.email||'sem e-mail'}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span class="badge ${u.perfil==='admin'?'badge-red':u.perfil==='tecnico'?'badge-amber':'badge-blue'}">
+            ${u.perfil==='admin'?'Administrador':u.perfil==='tecnico'?'Técnico':'Visualizador'}
+          </span>
+          <span class="badge ${u.status==='ativo'?'badge-green':'badge-red'} badge-dot">${u.status==='ativo'?'Ativo':'Inativo'}</span>
+          ${!u.fixo ? `
+            <button class="action-btn" onclick="openSysUserModal(${u.id})">✏️</button>
+            <button class="action-btn" onclick="deleteSysUser(${u.id})">🗑️</button>
+          ` : ''}
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function openSysUserModal(id) {
+    editingSysUserId = id || null;
+    document.getElementById('sysuser-modal-title').textContent = id ? 'Editar usuário' : 'Novo usuário do sistema';
+    ['su-nome','su-login','su-email','su-senha'].forEach(f => document.getElementById(f).value = '');
+    document.getElementById('su-perfil').value = 'tecnico';
+    document.getElementById('su-status').value = 'ativo';
+    document.querySelectorAll('#su-modulos input').forEach(cb => cb.checked = true);
+
+    if (id) {
+      const u = sysUsers.find(x => x.id === id);
+      if (u) {
+        document.getElementById('su-nome').value = u.nome;
+        document.getElementById('su-login').value = u.login;
+        document.getElementById('su-email').value = u.email||'';
+        document.getElementById('su-perfil').value = u.perfil;
+        document.getElementById('su-status').value = u.status;
+        document.querySelectorAll('#su-modulos input').forEach(cb => {
+          cb.checked = (u.modulos||[]).includes(cb.value);
+        });
+      }
+    }
+    document.getElementById('sysuser-modal-overlay').classList.add('open');
+  }
+
+  function closeSysUserModal() {
+    document.getElementById('sysuser-modal-overlay').classList.remove('open');
+    editingSysUserId = null;
+  }
+
+  function saveSysUser() {
+    const nome  = document.getElementById('su-nome').value.trim();
+    const login = document.getElementById('su-login').value.trim();
+    const email = document.getElementById('su-email').value.trim();
+    const senha = document.getElementById('su-senha').value;
+    const perfil = document.getElementById('su-perfil').value;
+    const status = document.getElementById('su-status').value;
+    if (!nome)  { showToast('⚠️ Informe o nome.'); return; }
+    if (!login) { showToast('⚠️ Informe o login.'); return; }
+    if (!editingSysUserId && senha.length < 8) { showToast('⚠️ Senha deve ter ao menos 8 caracteres.'); return; }
+
+    const modulos = [...document.querySelectorAll('#su-modulos input:checked')].map(cb => cb.value);
+    const user = { id: editingSysUserId || Date.now(), nome, login, email, perfil, status, modulos };
+
+    if (editingSysUserId) {
+      sysUsers = sysUsers.map(u => u.id === editingSysUserId ? user : u);
+      showToast('✅ Usuário atualizado!');
+    } else {
+      sysUsers.push(user);
+      showToast('✅ Usuário criado!');
+    }
+    closeSysUserModal();
+    renderSysUsers();
+  }
+
+  function deleteSysUser(id) {
+    const u = sysUsers.find(x => x.id === id);
+    if (!u || !confirm(`Excluir o usuário "${u.nome}"?`)) return;
+    sysUsers = sysUsers.filter(x => x.id !== id);
+    renderSysUsers();
+    showToast('🗑️ Usuário removido.');
+  }
+
+  function exportarDados() {
+    const dados = { clientes: clients, ativos, usuarios, permissoes, antivirus, exportadoEm: new Date().toISOString() };
+    const blob = new Blob([JSON.stringify(dados, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = `itmanager_backup_${new Date().toISOString().split('T')[0]}.json`;
+    a.click(); URL.revokeObjectURL(url);
+    showToast('✅ Dados exportados em JSON!');
+  }
+
+  function exportarTudoCSV() {
+    relAtualTipo = 'clientes'; exportarCSV();
+    setTimeout(() => { relAtualTipo = 'ativos'; exportarCSV(); }, 500);
+    setTimeout(() => { relAtualTipo = 'usuarios'; exportarCSV(); }, 1000);
+  }
+
+  function limparDados() {
+    if (!confirm('⚠️ ATENÇÃO: Isso apagará todos os dados locais. Os dados no banco de dados (Railway) não serão afetados. Continuar?')) return;
+    showToast('ℹ️ Dados locais limpos. Recarregando...');
+    setTimeout(() => location.reload(), 1500);
+  }
+  // ── FIM CONFIGURAÇÕES ─────────────────────────────────────
+
+  // ── RELATÓRIOS ────────────────────────────────────────────
+  let agendamentos = [];
+  let relAtualTipo = '';
+  let relAtualDados = [];
+
+  function showRelTab(tab) {
+    ['modelos','personalizado','agendamento'].forEach(t => {
+      const el = document.getElementById('rel-tab-' + t);
+      const btn = document.getElementById('tab-' + t);
+      if (el) el.style.display = t === tab ? 'block' : 'none';
+      if (btn) btn.classList.toggle('active', t === tab);
+    });
+    if (tab === 'personalizado') {
+      const sel = document.getElementById('rel-custom-cliente');
+      if (sel) sel.innerHTML = '<option value="">Todos os clientes</option>'
+        + clients.map(c => `<option value="${c.id}">${c.nome}</option>`).join('');
+    }
+    if (tab === 'agendamento') renderAgendamentos();
+  }
+
+  function filtrarRelatorio() {
+    gerarRelatorio(relAtualTipo);
+  }
+
+  function gerarRelatorio(tipo) {
+    relAtualTipo = tipo;
+    const clienteId = document.getElementById('report-filter-cliente')?.value || '';
+
+    // Popula filtro de cliente
+    const fc = document.getElementById('report-filter-cliente');
+    if (fc) fc.innerHTML = '<option value="">Todos os clientes</option>'
+      + clients.map(c => `<option value="${c.id}">${c.nome}</option>`).join('');
+    if (clienteId) fc.value = clienteId;
+
+    const filterCliente = c => !clienteId || String(c.id) === clienteId || String(c.clienteId) === clienteId;
+    const now = new Date().toLocaleDateString('pt-BR');
+
+    const titulos = {
+      geral: '📊 Relatório Geral do Sistema',
+      clientes: '👥 Relatório de Clientes',
+      ativos: '🖥 Relatório de Ativos',
+      usuarios: '🔑 Relatório de Usuários',
+      antivirus: '🔒 Relatório de Antivírus',
+      permissoes: '🛡 Relatório de Permissões',
+      vpn: '🔐 Relatório de VPN',
+      garantias: '📅 Relatório de Garantias',
+      resumo_cliente: '🏢 Resumo por Cliente',
+    };
+
+    document.getElementById('report-preview-title').textContent = titulos[tipo] || 'Relatório';
+    document.getElementById('report-preview').style.display = 'block';
+    document.getElementById('report-preview').scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+    let html = `<div style="color:var(--muted);font-size:12px;margin-bottom:20px">Gerado em ${now} · IT Manager</div>`;
+
+    if (tipo === 'geral' || tipo === 'clientes') {
+      const lista = clients.filter(filterCliente);
+      html += `<div class="report-section">
+        <div class="report-section-title">👥 Clientes (${lista.length})</div>
+        <div class="report-stat-row">
+          <div class="report-stat-box"><div class="report-stat-val">${lista.length}</div><div class="report-stat-lbl">Total</div></div>
+          <div class="report-stat-box"><div class="report-stat-val">${lista.filter(c=>c.status==='ativo').length}</div><div class="report-stat-lbl">Ativos</div></div>
+          <div class="report-stat-box"><div class="report-stat-val">${lista.filter(c=>c.status!=='ativo').length}</div><div class="report-stat-lbl">Inativos</div></div>
+        </div>
+        <table style="width:100%">
+          <thead><tr>
+            <th>Cliente</th><th>CNPJ</th><th>Segmento</th><th>Responsável</th><th>Status</th><th>Ativos</th><th>Usuários</th>
+          </tr></thead>
+          <tbody>${lista.map(c => `<tr>
+            <td><strong>${c.nome}</strong></td>
+            <td style="color:var(--muted);font-family:var(--mono);font-size:12px">${c.cnpj||'—'}</td>
+            <td>${c.segmento||'—'}</td>
+            <td>${c.resp||'—'}</td>
+            <td><span class="badge ${c.status==='ativo'?'badge-green':'badge-red'} badge-dot">${c.status==='ativo'?'Ativo':'Inativo'}</span></td>
+            <td>${ativos.filter(a=>String(a.clienteId)===String(c.id)).length}</td>
+            <td>${usuarios.filter(u=>String(u.clienteId)===String(c.id)).length}</td>
+          </tr>`).join('')}</tbody>
+        </table>
+      </div>`;
+    }
+
+    if (tipo === 'geral' || tipo === 'ativos') {
+      const lista = ativos.filter(filterCliente);
+      html += `<div class="report-section">
+        <div class="report-section-title">🖥 Ativos (${lista.length})</div>
+        <div class="report-stat-row">
+          <div class="report-stat-box"><div class="report-stat-val">${lista.length}</div><div class="report-stat-lbl">Total</div></div>
+          <div class="report-stat-box"><div class="report-stat-val">${lista.filter(a=>a.tipo==='Computador').length}</div><div class="report-stat-lbl">Computadores</div></div>
+          <div class="report-stat-box"><div class="report-stat-val">${lista.filter(a=>a.tipo==='Notebook').length}</div><div class="report-stat-lbl">Notebooks</div></div>
+          <div class="report-stat-box"><div class="report-stat-val">${lista.filter(a=>a.tipo==='Servidor').length}</div><div class="report-stat-lbl">Servidores</div></div>
+          <div class="report-stat-box"><div class="report-stat-val">${lista.filter(a=>a.status==='em_uso').length}</div><div class="report-stat-lbl">Em uso</div></div>
+        </div>
+        <table style="width:100%">
+          <thead><tr><th>Patrimônio</th><th>Nome</th><th>Tipo</th><th>Cliente</th><th>Usuário</th><th>SO</th><th>Status</th></tr></thead>
+          <tbody>${lista.map(a => {
+            const u = usuarios.find(u=>String(u.id)===String(a.usuarioId));
+            return `<tr>
+              <td><span class="patrimonio-badge">${a.patrimonio||'—'}</span></td>
+              <td><strong>${a.nome}</strong>${a.modelo?`<br><small style="color:var(--muted)">${a.modelo}</small>`:''}</td>
+              <td>${a.tipo||'—'}</td>
+              <td>${clienteNome(a.clienteId)}</td>
+              <td>${u?u.nome:'—'}</td>
+              <td style="font-size:12px;color:var(--muted)">${a.so||'—'}</td>
+              <td><span class="badge ${ATIVO_STATUS_BADGE[a.status]||'badge-green'} badge-dot">${ATIVO_STATUS_LABEL[a.status]||a.status}</span></td>
+            </tr>`;
+          }).join('')}</tbody>
+        </table>
+      </div>`;
+    }
+
+    if (tipo === 'geral' || tipo === 'usuarios') {
+      const lista = usuarios.filter(filterCliente);
+      html += `<div class="report-section">
+        <div class="report-section-title">🔑 Usuários (${lista.length})</div>
+        <div class="report-stat-row">
+          <div class="report-stat-box"><div class="report-stat-val">${lista.length}</div><div class="report-stat-lbl">Total</div></div>
+          <div class="report-stat-box"><div class="report-stat-val">${lista.filter(u=>u.status==='ativo').length}</div><div class="report-stat-lbl">Ativos</div></div>
+          <div class="report-stat-box"><div class="report-stat-val">${lista.filter(u=>u.status==='ferias').length}</div><div class="report-stat-lbl">Férias</div></div>
+        </div>
+        <table style="width:100%">
+          <thead><tr><th>Nome</th><th>Cargo</th><th>Setor</th><th>Cliente</th><th>E-mail</th><th>Gestor</th><th>Status</th></tr></thead>
+          <tbody>${lista.map(u => `<tr>
+            <td><strong>${u.nome}</strong></td>
+            <td style="color:var(--muted)">${u.cargo||'—'}</td>
+            <td>${u.setor||'—'}</td>
+            <td>${clienteNome(u.clienteId)}</td>
+            <td style="font-size:12px;color:var(--muted)">${u.email||'—'}</td>
+            <td style="color:var(--muted)">${u.gestor||'—'}</td>
+            <td><span class="badge ${u.status==='ativo'?'badge-green':u.status==='ferias'?'badge-amber':'badge-red'} badge-dot">${u.status==='ativo'?'Ativo':u.status==='ferias'?'Férias':u.status||'—'}</span></td>
+          </tr>`).join('')}</tbody>
+        </table>
+      </div>`;
+    }
+
+    if (tipo === 'geral' || tipo === 'antivirus') {
+      const lista = antivirus.filter(filterCliente);
+      html += `<div class="report-section">
+        <div class="report-section-title">🔒 Antivírus (${lista.length})</div>
+        <div class="report-stat-row">
+          <div class="report-stat-box"><div class="report-stat-val">${lista.filter(a=>a.status==='instalado').length}</div><div class="report-stat-lbl">Instalados</div></div>
+          <div class="report-stat-box"><div class="report-stat-val" style="color:var(--amber)">${lista.filter(a=>a.status==='nao_instalado').length}</div><div class="report-stat-lbl">Não instalados</div></div>
+          <div class="report-stat-box"><div class="report-stat-val" style="color:var(--red)">${lista.filter(a=>a.status==='expirado').length}</div><div class="report-stat-lbl">Expirados</div></div>
+        </div>
+        <table style="width:100%">
+          <thead><tr><th>Colaborador</th><th>Cliente</th><th>Antivírus</th><th>Versão</th><th>Instalado em</th><th>Por</th><th>Status</th></tr></thead>
+          <tbody>${lista.map(a => {
+            const u = usuarios.find(u=>String(u.id)===String(a.usuarioId));
+            const avNome = a.nome==='Outro'?(a.nomeCustom||'Outro'):(a.nome||'—');
+            return `<tr>
+              <td><strong>${u?u.nome:'—'}</strong></td>
+              <td>${clienteNome(a.clienteId)}</td>
+              <td>${avNome}</td>
+              <td style="font-size:12px;color:var(--muted)">${a.versao||'—'}</td>
+              <td style="font-size:12px;color:var(--muted)">${a.dataInst||'—'}</td>
+              <td style="color:var(--muted)">${a.instalador||'—'}</td>
+              <td><span class="badge ${AV_STATUS_BADGE[a.status]||'badge-green'} badge-dot">${AV_STATUS_LABEL[a.status]||a.status}</span></td>
+            </tr>`;
+          }).join('')}</tbody>
+        </table>
+      </div>`;
+    }
+
+    if (tipo === 'geral' || tipo === 'permissoes') {
+      const lista = permissoes.filter(filterCliente);
+      html += `<div class="report-section">
+        <div class="report-section-title">🛡 Permissões (${lista.length})</div>
+        <table style="width:100%">
+          <thead><tr><th>Usuário</th><th>Cliente</th><th>Pasta / Recurso</th><th>Nível</th><th>Grupos AD</th></tr></thead>
+          <tbody>${lista.map(p => {
+            const u = usuarios.find(u=>String(u.id)===String(p.usuarioId));
+            return `<tr>
+              <td><strong>${u?u.nome:'—'}</strong></td>
+              <td>${clienteNome(p.clienteId)}</td>
+              <td style="font-family:var(--mono);font-size:12px">${p.pasta||'—'}</td>
+              <td style="font-weight:500;color:${NIVEL_COLOR[p.nivel]||'var(--muted)'}">${NIVEL_LABEL[p.nivel]||p.nivel||'—'}</td>
+              <td style="font-size:12px">${(p.grupos||[]).join(', ')||'—'}</td>
+            </tr>`;
+          }).join('')}</tbody>
+        </table>
+      </div>`;
+    }
+
+    if (tipo === 'vpn' || tipo === 'geral') {
+      const lista = permissoes.filter(p => p.vpn === 'sim').filter(filterCliente);
+      html += `<div class="report-section">
+        <div class="report-section-title">🔐 VPN (${lista.length} usuários)</div>
+        <table style="width:100%">
+          <thead><tr><th>Usuário</th><th>Cliente</th><th>Tipo VPN</th><th>Usuário VPN</th><th>Instalado em</th><th>Por</th><th>Status</th></tr></thead>
+          <tbody>${lista.map(p => {
+            const u = usuarios.find(u=>String(u.id)===String(p.usuarioId));
+            return `<tr>
+              <td><strong>${u?u.nome:'—'}</strong></td>
+              <td>${clienteNome(p.clienteId)}</td>
+              <td>${p.vpnTipo||'—'}</td>
+              <td style="font-family:var(--mono);font-size:12px">${p.vpnUser||'—'}</td>
+              <td style="font-size:12px;color:var(--muted)">${p.vpnData||'—'}</td>
+              <td style="color:var(--muted)">${p.vpnInstalador||'—'}</td>
+              <td><span class="badge ${p.vpnStatus==='ativa'?'badge-green':p.vpnStatus==='suspensa'?'badge-amber':'badge-red'} badge-dot">${p.vpnStatus||'Ativa'}</span></td>
+            </tr>`;
+          }).join('')}</tbody>
+        </table>
+      </div>`;
+    }
+
+    if (tipo === 'garantias') {
+      const lista = ativos.filter(a => a.garantia).filter(filterCliente);
+      html += `<div class="report-section">
+        <div class="report-section-title">📅 Garantias (${lista.length} ativos com garantia)</div>
+        <table style="width:100%">
+          <thead><tr><th>Patrimônio</th><th>Equipamento</th><th>Cliente</th><th>Garantia até</th></tr></thead>
+          <tbody>${lista.map(a => `<tr>
+            <td><span class="patrimonio-badge">${a.patrimonio||'—'}</span></td>
+            <td><strong>${a.nome}</strong></td>
+            <td>${clienteNome(a.clienteId)}</td>
+            <td style="font-weight:500">${a.garantia}</td>
+          </tr>`).join('')}</tbody>
+        </table>
+      </div>`;
+    }
+
+    if (tipo === 'resumo_cliente') {
+      const lista = clienteId ? clients.filter(c=>String(c.id)===clienteId) : clients;
+      lista.forEach(c => {
+        const cAtivos = ativos.filter(a=>String(a.clienteId)===String(c.id));
+        const cUsers  = usuarios.filter(u=>String(u.clienteId)===String(c.id));
+        const cAv     = antivirus.filter(a=>String(a.clienteId)===String(c.id));
+        html += `<div class="report-section">
+          <div class="report-section-title">🏢 ${c.nome}</div>
+          <div class="report-stat-row">
+            <div class="report-stat-box"><div class="report-stat-val">${cAtivos.length}</div><div class="report-stat-lbl">Ativos</div></div>
+            <div class="report-stat-box"><div class="report-stat-val">${cUsers.length}</div><div class="report-stat-lbl">Usuários</div></div>
+            <div class="report-stat-box"><div class="report-stat-val">${cAv.filter(a=>a.status==='instalado').length}/${cAv.length}</div><div class="report-stat-lbl">Antivírus</div></div>
+          </div>
+        </div>`;
+      });
+    }
+
+    relAtualDados = html;
+    document.getElementById('report-body').innerHTML = html || '<div style="color:var(--muted);text-align:center;padding:40px">Nenhum dado para exibir.</div>';
+  }
+
+  function gerarRelatorioCustom() {
+    const titulo  = document.getElementById('rel-custom-titulo').value || 'Relatório Personalizado';
+    const cliente = document.getElementById('rel-custom-cliente').value;
+    const secs = {
+      clientes:   document.getElementById('rel-sec-clientes').checked,
+      ativos:     document.getElementById('rel-sec-ativos').checked,
+      usuarios:   document.getElementById('rel-sec-usuarios').checked,
+      antivirus:  document.getElementById('rel-sec-antivirus').checked,
+      permissoes: document.getElementById('rel-sec-permissoes').checked,
+      vpn:        document.getElementById('rel-sec-vpn').checked,
+    };
+    const obs = document.getElementById('rel-custom-obs').value;
+    const de  = document.getElementById('rel-periodo-de').value;
+    const ate = document.getElementById('rel-periodo-ate').value;
+
+    document.getElementById('report-custom-title').textContent = titulo;
+    document.getElementById('report-custom-preview').style.display = 'block';
+    document.getElementById('report-custom-preview').scrollIntoView({ behavior:'smooth', block:'start' });
+
+    if (cliente) {
+      const fc = document.getElementById('report-filter-cliente');
+      if (fc) fc.value = cliente;
+    }
+
+    let tipos = [];
+    if (secs.clientes)   tipos.push('clientes');
+    if (secs.ativos)     tipos.push('ativos');
+    if (secs.usuarios)   tipos.push('usuarios');
+    if (secs.antivirus)  tipos.push('antivirus');
+    if (secs.permissoes) tipos.push('permissoes');
+    if (secs.vpn)        tipos.push('vpn');
+
+    let html = '';
+    if (obs) html += `<div style="background:var(--surface2);border-radius:8px;padding:14px;margin-bottom:20px;font-size:13px;color:var(--muted)">${obs}</div>`;
+    if (de || ate) html += `<div style="font-size:12px;color:var(--muted);margin-bottom:16px">Período: ${de||'—'} até ${ate||'—'}</div>`;
+
+    // Salva clienteId temporariamente no filtro
+    const fc = document.getElementById('report-filter-cliente');
+    if (fc && cliente) fc.value = cliente;
+
+    tipos.forEach(t => {
+      const prev = document.getElementById('report-preview').style.display;
+      document.getElementById('report-preview').style.display = 'none';
+      gerarRelatorio(t);
+      const body = document.getElementById('report-body').innerHTML;
+      html += body;
+      document.getElementById('report-preview').style.display = prev;
+    });
+
+    document.getElementById('report-custom-body').innerHTML = html || '<div style="color:var(--muted);text-align:center;padding:40px">Nenhuma seção selecionada.</div>';
+  }
+
+  function imprimirRelatorio() {
+    const conteudo = document.getElementById('report-body').innerHTML;
+    const titulo   = document.getElementById('report-preview-title').textContent;
+    _abrirJanelaImpressao(titulo, conteudo);
+  }
+
+  function imprimirRelatorioCustom() {
+    const conteudo = document.getElementById('report-custom-body').innerHTML;
+    const titulo   = document.getElementById('report-custom-title').textContent;
+    _abrirJanelaImpressao(titulo, conteudo);
+  }
+
+  function _abrirJanelaImpressao(titulo, conteudo) {
+    const w = window.open('', '_blank');
+    w.document.write(`<!DOCTYPE html><html><head><title>${titulo}</title>
+    <style>
+      body { font-family: Arial, sans-serif; font-size: 12px; color: #333; padding: 20px; }
+      h1 { font-size: 18px; margin-bottom: 4px; }
+      table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+      th { background: #f5f5f5; padding: 8px; text-align: left; font-size: 11px; border: 1px solid #ddd; }
+      td { padding: 8px; border: 1px solid #eee; vertical-align: top; }
+      .badge { padding: 2px 8px; border-radius: 99px; font-size: 11px; }
+      .badge-green { background: #d4f4e2; color: #1a7a40; }
+      .badge-red { background: #fde8e8; color: #c0392b; }
+      .badge-amber { background: #fef3cd; color: #8a5c00; }
+      .badge-blue { background: #d6eaff; color: #1a5fa8; }
+      .patrimonio-badge { background: #ede9fe; color: #5b21b6; padding: 2px 8px; border-radius: 6px; font-size: 11px; }
+      .report-section-title { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #666; padding: 8px 0; border-bottom: 2px solid #eee; margin-bottom: 12px; font-weight: 600; }
+      .report-stat-row { display: flex; gap: 12px; margin-bottom: 16px; }
+      .report-stat-box { background: #f9f9f9; border: 1px solid #eee; border-radius: 6px; padding: 10px 14px; }
+      .report-stat-val { font-size: 20px; font-weight: 700; }
+      .report-stat-lbl { font-size: 11px; color: #666; }
+      @media print { body { margin: 0; } }
+    </style></head><body>
+    <h1>${titulo}</h1>
+    <p style="color:#999;font-size:11px">Gerado em ${new Date().toLocaleDateString('pt-BR')} · IT Manager — MCRS</p>
+    <hr style="margin:12px 0;border:none;border-top:1px solid #eee"/>
+    ${conteudo}
+    </body></html>`);
+    w.document.close();
+    w.print();
+  }
+
+  function exportarCSV() {
+    const tipo = relAtualTipo;
+    const clienteId = document.getElementById('report-filter-cliente')?.value || '';
+    const filterC = c => !clienteId || String(c.id)===clienteId || String(c.clienteId)===clienteId;
+    let csv = '', nome = 'relatorio';
+
+    if (tipo === 'clientes') {
+      csv = 'Nome,CNPJ,Segmento,Responsável,E-mail,Status\n'
+        + clients.filter(filterC).map(c => `"${c.nome}","${c.cnpj||''}","${c.segmento||''}","${c.resp||''}","${c.email||''}","${c.status||''}"`).join('\n');
+      nome = 'clientes';
+    } else if (tipo === 'ativos') {
+      csv = 'Patrimônio,Nome,Tipo,Marca,Modelo,Cliente,Usuário,SO,Status\n'
+        + ativos.filter(filterC).map(a => {
+          const u = usuarios.find(u=>String(u.id)===String(a.usuarioId));
+          return `"${a.patrimonio||''}","${a.nome}","${a.tipo||''}","${a.marca||''}","${a.modelo||''}","${clienteNome(a.clienteId)}","${u?u.nome:''}","${a.so||''}","${a.status||''}"`;
+        }).join('\n');
+      nome = 'ativos';
+    } else if (tipo === 'usuarios') {
+      csv = 'Nome,Cargo,Setor,Cliente,E-mail,Gestor,Status\n'
+        + usuarios.filter(filterC).map(u => `"${u.nome}","${u.cargo||''}","${u.setor||''}","${clienteNome(u.clienteId)}","${u.email||''}","${u.gestor||''}","${u.status||''}"`).join('\n');
+      nome = 'usuarios';
+    } else if (tipo === 'antivirus') {
+      csv = 'Colaborador,Cliente,Antivírus,Versão,Licença,Data Instalação,Instalado por,Status\n'
+        + antivirus.filter(filterC).map(a => {
+          const u = usuarios.find(u=>String(u.id)===String(a.usuarioId));
+          const avNome = a.nome==='Outro'?(a.nomeCustom||'Outro'):(a.nome||'');
+          return `"${u?u.nome:''}","${clienteNome(a.clienteId)}","${avNome}","${a.versao||''}","${a.licenca||''}","${a.dataInst||''}","${a.instalador||''}","${a.status||''}"`;
+        }).join('\n');
+      nome = 'antivirus';
+    } else {
+      csv = 'Relatório gerado em ' + new Date().toLocaleDateString('pt-BR');
+      nome = 'relatorio';
+    }
+
+    const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = `${nome}_${new Date().toISOString().split('T')[0]}.csv`;
+    a.click(); URL.revokeObjectURL(url);
+    showToast('✅ CSV exportado!');
+  }
+
+  function exportarCSVCustom() {
+    relAtualTipo = 'clientes';
+    exportarCSV();
+  }
+
+  // Agendamentos
+  function salvarAgendamento() {
+    const destino    = document.getElementById('email-destino').value.trim();
+    const cc         = document.getElementById('email-cc').value.trim();
+    const assunto    = document.getElementById('email-assunto').value.trim();
+    const tipoRel    = document.getElementById('email-tipo-rel').value;
+    const frequencia = document.getElementById('email-frequencia').value;
+    const mensagem   = document.getElementById('email-mensagem').value.trim();
+    if (!destino) { showToast('⚠️ Informe o e-mail de destino.'); return; }
+
+    const ag = {
+      id: Date.now(),
+      destino, cc, assunto, tipoRel, frequencia, mensagem,
+      criadoEm: new Date().toLocaleDateString('pt-BR'),
+      ativo: true
+    };
+    agendamentos.push(ag);
+    renderAgendamentos();
+    showToast('✅ Agendamento salvo!');
+    ['email-destino','email-cc','email-assunto','email-mensagem'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+  }
+
+  const FREQ_LABEL = { mensal:'Mensal', quinzenal:'Quinzenal', semanal:'Semanal' };
+  const REL_LABEL  = { geral:'Relatório Geral', clientes:'Clientes', ativos:'Ativos', usuarios:'Usuários', antivirus:'Antivírus', permissoes:'Permissões', vpn:'VPN' };
+
+  function renderAgendamentos() {
+    const el = document.getElementById('agendamentos-lista');
+    if (!el) return;
+    if (!agendamentos.length) {
+      el.innerHTML = '<div class="empty"><div class="empty-icon">📧</div><div class="empty-text">Nenhum agendamento configurado ainda.</div></div>';
+      return;
+    }
+    el.innerHTML = agendamentos.map(ag => `
+      <div style="background:var(--surface2);border-radius:10px;padding:14px;margin-bottom:10px;border:1px solid var(--border)">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+          <div style="font-size:13px;font-weight:600">${ag.destino}</div>
+          <div style="display:flex;gap:6px">
+            <span class="badge badge-green">${FREQ_LABEL[ag.frequencia]||ag.frequencia}</span>
+            <button class="action-btn" onclick="deleteAgendamento(${ag.id})">🗑️</button>
+          </div>
+        </div>
+        <div style="font-size:12px;color:var(--muted)">📊 ${REL_LABEL[ag.tipoRel]||ag.tipoRel}</div>
+        ${ag.assunto ? `<div style="font-size:12px;color:var(--muted);margin-top:2px">📩 ${ag.assunto}</div>` : ''}
+        <div style="font-size:11px;color:var(--muted);margin-top:6px">Criado em ${ag.criadoEm}</div>
+      </div>
+    `).join('');
+  }
+
+  function deleteAgendamento(id) {
+    agendamentos = agendamentos.filter(a => a.id !== id);
+    renderAgendamentos();
+    showToast('🗑️ Agendamento removido.');
+  }
+  // ── FIM RELATÓRIOS ────────────────────────────────────────
 
   // ── ANTIVÍRUS ─────────────────────────────────────────────
   let antivirus = [];
