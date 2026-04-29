@@ -5160,6 +5160,7 @@
   let TOKEN = '';
 
   async function api(method, path, body) {
+    if (/^\/[a-z]+$/.test(path)) path += '/';
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 15000);
     try {
