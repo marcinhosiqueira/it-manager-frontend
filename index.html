@@ -2806,7 +2806,18 @@
         <div id="import-preview-body"></div>
       </div>
 
-      <!-- STEP 3: Progress -->
+      <!-- STEP 3: Duplicatas -->
+      <div id="import-step-duplicates" style="display:none">
+        <div style="font-size:14px;font-weight:600;margin-bottom:6px">Usuários já cadastrados detectados</div>
+        <div style="font-size:13px;color:var(--muted);margin-bottom:14px">Escolha o que fazer com cada um. <strong style="color:var(--text)">Atualizar</strong> preenche apenas os campos vazios. <strong style="color:var(--text)">Pular</strong> mantém o usuário exatamente como está.</div>
+        <div style="display:flex;gap:8px;margin-bottom:14px">
+          <button class="btn btn-ghost" style="font-size:12px;padding:5px 14px" onclick="_setAllDupeDecision('merge')">✅ Atualizar todos</button>
+          <button class="btn btn-ghost" style="font-size:12px;padding:5px 14px" onclick="_setAllDupeDecision('skip')">⏭ Pular todos</button>
+        </div>
+        <div id="import-dupes-list" style="max-height:380px;overflow-y:auto;display:flex;flex-direction:column;gap:8px"></div>
+      </div>
+
+      <!-- STEP 4: Progress -->
       <div id="import-step-progress" style="display:none">
         <div style="margin-bottom:16px">
           <div style="display:flex;justify-content:space-between;margin-bottom:8px;font-size:13px">
@@ -2820,7 +2831,7 @@
         <div id="import-log" style="background:var(--bg);border-radius:8px;padding:12px;max-height:340px;overflow-y:auto;font-family:var(--mono);font-size:11px;line-height:1.7;color:var(--muted)"></div>
       </div>
 
-      <!-- STEP 4: Concluído -->
+      <!-- STEP 5: Concluído -->
       <div id="import-step-done" style="display:none;text-align:center;padding:32px 0">
         <div style="font-size:52px;margin-bottom:16px">✅</div>
         <div id="import-done-title" style="font-size:17px;font-weight:600;margin-bottom:8px"></div>
@@ -2830,6 +2841,7 @@
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="fecharImport()">Fechar</button>
+      <button class="btn btn-primary" id="import-btn-dupes" style="display:none" onclick="_irParaDuplicatas()">Verificar duplicatas →</button>
       <button class="btn btn-primary" id="import-btn-exec" style="display:none" onclick="executarImportacao()">Importar tudo</button>
     </div>
   </div>
@@ -5521,13 +5533,12 @@
   function abrirImport() {
     const overlay = document.getElementById('import-overlay');
     overlay.style.display = 'flex';
-    // Popula select de clientes
     const sel = document.getElementById('import-cliente');
     sel.innerHTML = '<option value="">Selecionar cliente...</option>'
       + clients.map(c => `<option value="${c.id}">${c.nome}</option>`).join('');
-    // Reset estado
     _showImportStep('upload');
     document.getElementById('import-btn-exec').style.display = 'none';
+    document.getElementById('import-btn-dupes').style.display = 'none';
     document.getElementById('import-file').value = '';
     _importDados = null;
   }
@@ -5537,7 +5548,7 @@
   }
 
   function _showImportStep(step) {
-    ['upload','preview','progress','done'].forEach(s => {
+    ['upload','preview','duplicates','progress','done'].forEach(s => {
       document.getElementById('import-step-' + s).style.display = s === step ? 'block' : 'none';
     });
   }
@@ -5592,10 +5603,27 @@
         return;
       }
 
-      // Colaboradores sempre primeiro (para popular o mapa de usuários)
+      // Colaboradores sempre primeiro
       sheets.sort((a, b) => a.tipo === 'colaboradores' ? -1 : b.tipo === 'colaboradores' ? 1 : 0);
 
-      _importDados = { clienteId, sheets };
+      // Detecta duplicatas de usuários
+      const seenNomes = new Set();
+      const dupes = [];
+      for (const sheet of sheets) {
+        if (sheet.tipo !== 'colaboradores') continue;
+        for (const row of sheet.rows) {
+          const nome = _v(row, 'colaborador');
+          if (!nome || seenNomes.has(nome.toLowerCase().trim())) continue;
+          seenNomes.add(nome.toLowerCase().trim());
+          const existing = usuarios.find(u => u.nome.toLowerCase().trim() === nome.toLowerCase().trim());
+          if (existing) dupes.push({ nome, existing, row, decision: 'merge' });
+        }
+      }
+
+      // Índice de patrimônios já existentes (para evitar duplicidade de ativos)
+      const patExistentes = new Set(ativos.map(a => String(a.patrimonio || '').trim().toLowerCase()).filter(Boolean));
+
+      _importDados = { clienteId, sheets, dupes, patExistentes };
       _renderImportPreview();
     } catch (e) {
       showToast('❌ Erro ao ler arquivo: ' + e.message);
@@ -5609,14 +5637,78 @@
     rede:          { icon: '🌐', label: 'Rede — IP / Hostname / Antivírus' },
   };
 
+  function _irParaDuplicatas() {
+    _showImportStep('duplicates');
+    document.getElementById('import-btn-dupes').style.display = 'none';
+    document.getElementById('import-btn-exec').style.display = 'inline-block';
+    _renderDuplicatesStep();
+  }
+
+  function _renderDuplicatesStep() {
+    const list = document.getElementById('import-dupes-list');
+    list.innerHTML = '';
+    _importDados.dupes.forEach((dupe, idx) => {
+      const u = dupe.existing;
+      const row = dupe.row;
+      const campos = [];
+      if (!u.setor    && _v(row, 'setor'))             campos.push('Setor');
+      if (!u.cargo    && _v(row, 'cargo'))             campos.push('Cargo');
+      if (!u.email    && _v(row, 'e-mail', 'email'))   campos.push('E-mail');
+      if (!u.gestor   && _v(row, 'gestor'))            campos.push('Gestor');
+      if ((!u.programas || !u.programas.length) && _v(row, 'softwares', 'software')) campos.push('Softwares');
+
+      const card = document.createElement('div');
+      card.style.cssText = 'padding:12px 14px;border:1px solid var(--border);border-radius:10px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap';
+      card.innerHTML = `
+        <div style="flex:1;min-width:0">
+          <div style="font-weight:600;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${dupe.nome}</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:3px">
+            ${campos.length ? '→ Preenche: <strong style="color:var(--text)">' + campos.join(', ') + '</strong>' : '<span style="color:var(--green)">✓ Todos os campos já preenchidos</span>'}
+          </div>
+        </div>
+        <div style="display:flex;gap:6px;flex-shrink:0">
+          <button id="dbtn-m-${idx}" class="btn btn-primary" style="font-size:12px;padding:5px 12px" onclick="_setDupeDecision(${idx},'merge')">✅ Atualizar</button>
+          <button id="dbtn-s-${idx}" class="btn btn-ghost"   style="font-size:12px;padding:5px 12px" onclick="_setDupeDecision(${idx},'skip')">⏭ Pular</button>
+        </div>`;
+      list.appendChild(card);
+    });
+  }
+
+  function _setDupeDecision(idx, decision) {
+    _importDados.dupes[idx].decision = decision;
+    const bm = document.getElementById('dbtn-m-' + idx);
+    const bs = document.getElementById('dbtn-s-' + idx);
+    if (!bm || !bs) return;
+    bm.className = decision === 'merge' ? 'btn btn-primary' : 'btn btn-ghost';
+    bs.className = decision === 'skip'  ? 'btn btn-primary' : 'btn btn-ghost';
+    bm.style.cssText = 'font-size:12px;padding:5px 12px';
+    bs.style.cssText = 'font-size:12px;padding:5px 12px';
+  }
+
+  function _setAllDupeDecision(decision) {
+    _importDados.dupes.forEach((_, i) => _setDupeDecision(i, decision));
+  }
+
   function _renderImportPreview() {
     _showImportStep('preview');
-    document.getElementById('import-btn-exec').style.display = 'inline-block';
+
+    // Botão correto baseado em duplicatas
+    const hasDupes = _importDados.dupes.length > 0;
+    document.getElementById('import-btn-dupes').style.display = hasDupes ? 'inline-block' : 'none';
+    document.getElementById('import-btn-exec').style.display  = hasDupes ? 'none' : 'inline-block';
 
     const tabsDiv  = document.getElementById('import-tabs');
     const bodyDiv  = document.getElementById('import-preview-body');
     tabsDiv.innerHTML = '';
     bodyDiv.innerHTML = '';
+
+    // Aviso de duplicatas no topo do preview
+    if (hasDupes) {
+      const warn = document.createElement('div');
+      warn.style.cssText = 'margin-bottom:14px;padding:10px 14px;background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.25);border-radius:8px;font-size:13px;color:var(--amber)';
+      warn.innerHTML = `⚠️ <strong>${_importDados.dupes.length} usuário${_importDados.dupes.length !== 1 ? 's' : ''} já ${_importDados.dupes.length !== 1 ? 'existem' : 'existe'}</strong> no sistema. Clique em <strong>Verificar duplicatas →</strong> para decidir o que fazer antes de importar.`;
+      bodyDiv.appendChild(warn);
+    }
 
     _importDados.sheets.forEach((sheet, idx) => {
       const info  = _TIPO_INFO[sheet.tipo];
@@ -5661,20 +5753,21 @@
 
   async function executarImportacao() {
     if (!_importDados) return;
-    const { clienteId, sheets } = _importDados;
+    const { clienteId, sheets, dupes, patExistentes } = _importDados;
 
     _showImportStep('progress');
     document.getElementById('import-btn-exec').style.display = 'none';
+    document.getElementById('import-btn-dupes').style.display = 'none';
 
-    const logEl  = document.getElementById('import-log');
-    const barEl  = document.getElementById('import-prog-bar');
-    const pctEl  = document.getElementById('import-prog-pct');
-    const lblEl  = document.getElementById('import-prog-label');
+    const logEl = document.getElementById('import-log');
+    const barEl = document.getElementById('import-prog-bar');
+    const pctEl = document.getElementById('import-prog-pct');
+    const lblEl = document.getElementById('import-prog-label');
     logEl.innerHTML = '';
 
     let total  = sheets.reduce((s, sh) => s + sh.rows.length, 0);
     let done   = 0;
-    let totUsr = 0, totAtv = 0, totErr = 0;
+    let totUsr = 0, totUpd = 0, totAtv = 0, totErr = 0;
 
     function log(msg) { logEl.innerHTML += msg + '<br>'; logEl.scrollTop = logEl.scrollHeight; }
     function tick(label) {
@@ -5685,9 +5778,31 @@
       if (label) lblEl.textContent = label;
     }
 
-    // Mapa nome-minúsculo → id (começa com usuários já carregados)
     const uMap = {};
     usuarios.forEach(u => { uMap[u.nome.toLowerCase().trim()] = u.id; });
+
+    const dupeDecisions = {};
+    (dupes || []).forEach(d => { dupeDecisions[d.nome.toLowerCase().trim()] = d.decision; });
+
+    function _patJaExiste(pat) {
+      if (!pat || pat === 'N/A') return false;
+      return patExistentes.has(String(pat).trim().toLowerCase());
+    }
+
+    async function _criarAtivo(body, label) {
+      const pat = body.patrimonio;
+      if (_patJaExiste(pat)) { log(`  ⏭ Patrimônio já existe: <strong>${pat}</strong>`); return; }
+      const res = await api('POST', '/ativos', body, true);
+      if (res) {
+        ativos.push(mapAtivo(res));
+        if (pat) patExistentes.add(String(pat).trim().toLowerCase());
+        totAtv++;
+        log(`  ✅ ${label}: <strong>${pat || body.nome}</strong>`);
+      } else {
+        totErr++;
+        log(`  ❌ Falha ${label}: ${pat || body.nome}`);
+      }
+    }
 
     for (const sheet of sheets) {
       log(`<br><span style="color:var(--accent)">▶ ${sheet.nome} (${_TIPO_INFO[sheet.tipo].label})</span>`);
@@ -5698,75 +5813,68 @@
           const nome = _v(row, 'colaborador');
           if (!nome) { tick(); continue; }
 
-          // Softwares → array
-          const swRaw = _v(row, 'softwares', 'software');
+          const swRaw   = _v(row, 'softwares', 'software');
           const programas = swRaw ? swRaw.split(',').map(s => s.trim()).filter(Boolean) : [];
+          const nomeKey = nome.toLowerCase().trim();
+          let usuarioId = uMap[nomeKey];
 
-          let usuarioId = uMap[nome.toLowerCase().trim()];
-          if (!usuarioId) {
+          if (usuarioId) {
+            const decision = dupeDecisions[nomeKey] || 'skip';
+            if (decision === 'merge') {
+              const existente = usuarios.find(u => u.id === usuarioId);
+              if (existente) {
+                const body = {
+                  nome:       existente.nome,
+                  setor:      existente.setor    || _v(row, 'setor'),
+                  cargo:      existente.cargo    || _v(row, 'cargo', 'função'),
+                  email:      existente.email    || _v(row, 'e-mail', 'email'),
+                  gestor:     existente.gestor   || _v(row, 'gestor'),
+                  email2:     existente.email2   || '',
+                  tel:        existente.tel      || '',
+                  admissao:   existente.admissao || '',
+                  login:      existente.login    || '',
+                  programas:  (existente.programas && existente.programas.length) ? existente.programas : programas,
+                  permissoes: existente.permissoes || [],
+                  status:     existente.status   || 'ativo',
+                  cliente_id: existente.cliente_id || clienteId,
+                  obs:        existente.obs      || '',
+                };
+                const res = await api('PUT', '/usuarios/' + usuarioId, body, true);
+                if (res) {
+                  const idx = usuarios.findIndex(u => u.id === usuarioId);
+                  if (idx !== -1) usuarios[idx] = mapUser(res);
+                  totUpd++;
+                  log(`  ✅ Atualizado: <strong>${nome}</strong>`);
+                } else { totErr++; log(`  ⚠️ Falha ao atualizar: ${nome}`); }
+              }
+            } else {
+              log(`  ⏭ Pulado: ${nome}`);
+            }
+          } else {
             const res = await api('POST', '/usuarios', {
-              nome,
-              setor:      _v(row, 'setor'),
-              cargo:      _v(row, 'cargo', 'função'),
-              email:      _v(row, 'e-mail', 'email'),
-              gestor:     _v(row, 'gestor'),
-              programas,
-              permissoes: [],
-              status:     'ativo',
-              cliente_id: clienteId,
+              nome, setor: _v(row, 'setor'), cargo: _v(row, 'cargo', 'função'),
+              email: _v(row, 'e-mail', 'email'), gestor: _v(row, 'gestor'),
+              programas, permissoes: [], status: 'ativo', cliente_id: clienteId,
             }, true);
             if (res) {
               usuarioId = res.id;
-              uMap[nome.toLowerCase().trim()] = usuarioId;
+              uMap[nomeKey] = usuarioId;
               usuarios.push(mapUser(res));
               totUsr++;
-              log(`  ✅ Usuário: <strong>${nome}</strong>`);
-            } else {
-              totErr++;
-              log(`  ❌ Falha usuário: ${nome}`);
-            }
-          } else {
-            log(`  ⏭ Já existe: ${nome}`);
+              log(`  ✅ Criado: <strong>${nome}</strong>`);
+            } else { totErr++; log(`  ❌ Falha ao criar: ${nome}`); }
           }
 
-          // Notebook
-          const pat  = _v(row, 'patrimônio', 'patrimonio');
-          const mod  = _v(row, 'modelo');
-          if (pat && pat !== 'N/A') {
-            const res = await api('POST', '/ativos', {
-              nome:       (mod || 'Notebook') + ' — ' + nome,
-              tipo:       mod || 'Notebook',
-              patrimonio: pat,
-              modelo:     mod,
-              status:     'em_uso',
-              usuario_id: usuarioId || null,
-              cliente_id: clienteId,
-            }, true);
-            if (res) { ativos.push(mapAtivo(res)); totAtv++; log(`  ✅ Notebook: ${pat}`); }
-            else      { totErr++; log(`  ❌ Falha notebook: ${pat}`); }
-          }
+          // Ativos sempre criados (usuário pode ter notebook + computador pessoal)
+          const pat = _v(row, 'patrimônio', 'patrimonio');
+          const mod = _v(row, 'modelo');
+          if (pat && pat !== 'N/A') await _criarAtivo({ nome: (mod || 'Notebook') + ' — ' + nome, tipo: mod || 'Notebook', patrimonio: pat, modelo: mod, status: 'em_uso', usuario_id: usuarioId || null, cliente_id: clienteId }, 'Notebook');
 
-          // Monitor 1
           const m1 = _v(row, 'monitor 1', 'monitor1');
-          if (m1 && m1 !== 'N/A' && m1 !== '') {
-            const res = await api('POST', '/ativos', {
-              nome: 'Monitor — ' + nome, tipo: 'Monitor', patrimonio: m1,
-              status: 'em_uso', usuario_id: usuarioId || null, cliente_id: clienteId,
-            }, true);
-            if (res) { ativos.push(mapAtivo(res)); totAtv++; log(`  ✅ Monitor 1: ${m1}`); }
-            else      { totErr++; log(`  ❌ Falha Monitor 1: ${m1}`); }
-          }
+          if (m1 && m1 !== 'N/A' && m1 !== '') await _criarAtivo({ nome: 'Monitor — ' + nome, tipo: 'Monitor', patrimonio: m1, status: 'em_uso', usuario_id: usuarioId || null, cliente_id: clienteId }, 'Monitor 1');
 
-          // Monitor 2
           const m2 = _v(row, 'monitor 2', 'monitor2');
-          if (m2 && m2 !== 'N/A' && m2 !== '') {
-            const res = await api('POST', '/ativos', {
-              nome: 'Monitor — ' + nome, tipo: 'Monitor', patrimonio: m2,
-              status: 'em_uso', usuario_id: usuarioId || null, cliente_id: clienteId,
-            }, true);
-            if (res) { ativos.push(mapAtivo(res)); totAtv++; log(`  ✅ Monitor 2: ${m2}`); }
-            else      { totErr++; log(`  ❌ Falha Monitor 2: ${m2}`); }
-          }
+          if (m2 && m2 !== 'N/A' && m2 !== '') await _criarAtivo({ nome: 'Monitor — ' + nome, tipo: 'Monitor', patrimonio: m2, status: 'em_uso', usuario_id: usuarioId || null, cliente_id: clienteId }, 'Monitor 2');
 
           tick(nome);
         }
@@ -5789,7 +5897,6 @@
           const emailRec = _v(row, 'email de recuperação', 'e-mail de recuperação');
           const numRec   = _v(row, 'número de recuperação', 'numero de recuperação');
           const chip     = _v(row, 'numero do chip', 'chip');
-
           if (numMod)   obsParts.push(`Nº Modelo: ${numMod}`);
           if (versao)   obsParts.push(`iOS: ${versao}`);
           if (senhaDes) obsParts.push(`Senha desbloqueio: ${senhaDes}`);
@@ -5801,23 +5908,7 @@
 
           const colabNome = _v(row, 'colaborador');
           const usuarioId = colabNome ? (uMap[colabNome.toLowerCase().trim()] || null) : null;
-
-          const res = await api('POST', '/ativos', {
-            nome:       controle || ('iPhone — ' + _v(row, 'modelo')),
-            tipo:       'Smartphone',
-            patrimonio: pat,
-            modelo:     _v(row, 'modelo'),
-            hd:         _v(row, 'armazenamento'),
-            serial:     _v(row, 'número de série', 'numero de serie'),
-            imei:       _v(row, 'imei'),
-            chip,
-            status:     'em_uso',
-            usuario_id: usuarioId,
-            cliente_id: clienteId,
-            obs:        obsParts.join('\n'),
-          }, true);
-          if (res) { ativos.push(mapAtivo(res)); totAtv++; log(`  ✅ iPhone: ${controle || pat}`); }
-          else      { totErr++; log(`  ❌ Falha iPhone: ${controle || pat}`); }
+          await _criarAtivo({ nome: controle || ('iPhone — ' + _v(row, 'modelo')), tipo: 'Smartphone', patrimonio: pat, modelo: _v(row, 'modelo'), hd: _v(row, 'armazenamento'), serial: _v(row, 'número de série', 'numero de serie'), imei: _v(row, 'imei'), chip, status: 'em_uso', usuario_id: usuarioId, cliente_id: clienteId, obs: obsParts.join('\n') }, 'iPhone');
           tick(controle || pat);
         }
       }
@@ -5825,8 +5916,8 @@
       // ── TABLETS ────────────────────────────────────────────
       else if (sheet.tipo === 'tablet') {
         for (const row of sheet.rows) {
-          const identif  = _v(row, 'identificação', 'identificacao');
-          const equip    = _v(row, 'equipamento');
+          const identif = _v(row, 'identificação', 'identificacao');
+          const equip   = _v(row, 'equipamento');
           if (!identif && !equip) { tick(); continue; }
 
           const obsParts = [];
@@ -5839,18 +5930,7 @@
 
           const colabNome = _v(row, 'colaborador');
           const usuarioId = colabNome ? (uMap[colabNome.toLowerCase().trim()] || null) : null;
-
-          const res = await api('POST', '/ativos', {
-            nome:       equip || 'Tablet',
-            tipo:       'Tablet',
-            patrimonio: identif,
-            status:     'em_uso',
-            usuario_id: usuarioId,
-            cliente_id: clienteId,
-            obs:        obsParts.join('\n'),
-          }, true);
-          if (res) { ativos.push(mapAtivo(res)); totAtv++; log(`  ✅ Tablet: ${identif}`); }
-          else      { totErr++; log(`  ❌ Falha Tablet: ${identif}`); }
+          await _criarAtivo({ nome: equip || 'Tablet', tipo: 'Tablet', patrimonio: identif, status: 'em_uso', usuario_id: usuarioId, cliente_id: clienteId, obs: obsParts.join('\n') }, 'Tablet');
           tick(identif);
         }
       }
@@ -5862,32 +5942,20 @@
           const hostname = _v(row, 'hostname');
           if (!ip && !hostname) { tick(); continue; }
 
-          const obsParts = [];
-          const trend    = _v(row, 'trend micro', 'trend');
-          const dataInst = _v(row, 'data da instalação', 'data instalacao');
-          const chave    = _v(row, 'chave pública', 'chave publica');
+          const obsParts  = [];
+          const trend     = _v(row, 'trend micro', 'trend');
+          const dataInst  = _v(row, 'data da instalação', 'data instalacao');
+          const chave     = _v(row, 'chave pública', 'chave publica');
           const configPor = _v(row, 'configurado por');
-          if (trend)    obsParts.push(`Trend Micro: ${trend}`);
-          if (dataInst) obsParts.push(`Instalação: ${dataInst}`);
-          if (chave)    obsParts.push(`Chave pública: ${chave}`);
+          if (trend)     obsParts.push(`Trend Micro: ${trend}`);
+          if (dataInst)  obsParts.push(`Instalação: ${dataInst}`);
+          if (chave)     obsParts.push(`Chave pública: ${chave}`);
           if (configPor) obsParts.push(`Configurado por: ${configPor}`);
 
           const colabNome = _v(row, 'colaborador');
           const usuarioId = colabNome ? (uMap[colabNome.toLowerCase().trim()] || null) : null;
           const tipoMaq   = _v(row, 'tipo de máquina', 'tipo de maquina', 'tipo');
-
-          const res = await api('POST', '/ativos', {
-            nome:       hostname || ip,
-            tipo:       tipoMaq || 'Computador',
-            hostname,
-            ip,
-            status:     'em_uso',
-            usuario_id: usuarioId,
-            cliente_id: clienteId,
-            obs:        obsParts.join('\n'),
-          }, true);
-          if (res) { ativos.push(mapAtivo(res)); totAtv++; log(`  ✅ ${tipoMaq || 'PC'}: ${hostname || ip}`); }
-          else      { totErr++; log(`  ❌ Falha: ${hostname || ip}`); }
+          await _criarAtivo({ nome: hostname || ip, tipo: tipoMaq || 'Computador', hostname, ip, status: 'em_uso', usuario_id: usuarioId, cliente_id: clienteId, obs: obsParts.join('\n') }, tipoMaq || 'PC');
           tick(hostname || ip);
         }
       }
@@ -5896,15 +5964,17 @@
     barEl.style.width = '100%';
     pctEl.textContent = '100%';
     lblEl.textContent = 'Concluído!';
-
     renderDashboard(); updateBadge(); updateAtivosBadge(); updateUsuariosBadge();
 
     setTimeout(() => {
       _showImportStep('done');
-      document.getElementById('import-done-title').textContent =
-        `${totUsr} usuário${totUsr !== 1 ? 's' : ''} e ${totAtv} ativo${totAtv !== 1 ? 's' : ''} importados`;
+      const partes = [];
+      if (totUsr)  partes.push(`${totUsr} usuário${totUsr !== 1 ? 's' : ''} criado${totUsr !== 1 ? 's' : ''}`);
+      if (totUpd)  partes.push(`${totUpd} atualizado${totUpd !== 1 ? 's' : ''}`);
+      if (totAtv)  partes.push(`${totAtv} ativo${totAtv !== 1 ? 's' : ''} importado${totAtv !== 1 ? 's' : ''}`);
+      document.getElementById('import-done-title').textContent = partes.join(' · ') || 'Nenhum registro novo';
       document.getElementById('import-done-sub').textContent =
-        totErr ? `${totErr} registro${totErr !== 1 ? 's' : ''} com falha — verifique o log acima` : 'Importação concluída sem erros!';
+        totErr ? `${totErr} registro${totErr !== 1 ? 's' : ''} com falha — verifique o log` : 'Importação concluída sem erros!';
     }, 600);
   }
 
