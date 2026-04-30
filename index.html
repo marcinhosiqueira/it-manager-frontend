@@ -607,6 +607,7 @@
     font-weight: 600; font-family: var(--mono);
   }
 </style>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 </head>
 <body>
 
@@ -693,6 +694,10 @@
     <button class="nav-item" onclick="showPage('base')">
       <span class="icon">📚</span> Base de Conhecimento
       <span class="nav-badge" id="badge-base">0</span>
+    </button>
+    <div class="nav-label" style="margin-top:8px">Ferramentas</div>
+    <button class="nav-item" onclick="abrirImport()">
+      <span class="icon">📥</span> Importar Excel
     </button>
   </nav>
   <div class="sidebar-footer">
@@ -2759,6 +2764,73 @@
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
       <button class="btn btn-primary" onclick="saveClient()">Salvar cliente</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL IMPORTAR EXCEL -->
+<div class="modal-overlay" id="import-overlay" style="display:none" onclick="if(event.target===this)fecharImport()">
+  <div class="modal" style="max-width:740px;width:96vw;max-height:90vh;display:flex;flex-direction:column">
+    <div class="modal-header">
+      <div class="modal-title">📥 Importar Excel</div>
+      <button class="modal-close" onclick="fecharImport()">✕</button>
+    </div>
+    <div class="modal-body" style="overflow-y:auto;flex:1">
+
+      <!-- STEP 1: Upload -->
+      <div id="import-step-upload">
+        <div class="form-group" style="margin-bottom:16px">
+          <label class="form-label">Cliente destino</label>
+          <select id="import-cliente" style="width:100%;background:var(--bg);border:1px solid var(--border2);border-radius:8px;padding:10px 12px;color:var(--text);font-size:14px">
+            <option value="">Selecionar cliente...</option>
+          </select>
+        </div>
+        <div id="import-dropzone" style="border:2px dashed var(--border2);border-radius:12px;padding:44px;text-align:center;cursor:pointer;transition:border-color .2s,background .2s">
+          <div style="font-size:40px;margin-bottom:12px">📊</div>
+          <div style="font-weight:600;margin-bottom:6px">Arraste o arquivo Excel aqui</div>
+          <div style="color:var(--muted);font-size:13px">ou clique para selecionar (.xlsx, .xls)</div>
+          <input type="file" id="import-file" accept=".xlsx,.xls" style="display:none" onchange="processarExcel(this.files[0])">
+        </div>
+        <div style="margin-top:14px;padding:12px;background:rgba(79,142,247,0.07);border:1px solid rgba(79,142,247,0.15);border-radius:8px;font-size:12px;color:var(--muted);line-height:1.7">
+          <strong style="color:var(--text)">Abas reconhecidas automaticamente:</strong><br>
+          👥 <strong>Colaboradores</strong> — colunas: Colaborador, Setor, Cargo, E-mail, Gestor, Patrimônio, Modelo, Monitor 1, Monitor 2, Softwares<br>
+          📱 <strong>iPhones</strong> — colunas: Controle, Patrimônio, Modelo, Armazenamento, IMEI, Número de série, Chip<br>
+          📱 <strong>Tablets</strong> — colunas: Equipamento, Identificação, E-mail Patrimonial, Colaborador<br>
+          🌐 <strong>Rede/IP</strong> — colunas: IP (Principal), Hostname, Colaborador, Tipo de Máquina
+        </div>
+      </div>
+
+      <!-- STEP 2: Preview -->
+      <div id="import-step-preview" style="display:none">
+        <div id="import-tabs" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px"></div>
+        <div id="import-preview-body"></div>
+      </div>
+
+      <!-- STEP 3: Progress -->
+      <div id="import-step-progress" style="display:none">
+        <div style="margin-bottom:16px">
+          <div style="display:flex;justify-content:space-between;margin-bottom:8px;font-size:13px">
+            <span id="import-prog-label" style="color:var(--muted)">Importando...</span>
+            <span id="import-prog-pct" style="font-weight:600">0%</span>
+          </div>
+          <div style="background:var(--bg);border-radius:8px;height:10px;overflow:hidden">
+            <div id="import-prog-bar" style="height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));width:0%;transition:width .25s;border-radius:8px"></div>
+          </div>
+        </div>
+        <div id="import-log" style="background:var(--bg);border-radius:8px;padding:12px;max-height:340px;overflow-y:auto;font-family:var(--mono);font-size:11px;line-height:1.7;color:var(--muted)"></div>
+      </div>
+
+      <!-- STEP 4: Concluído -->
+      <div id="import-step-done" style="display:none;text-align:center;padding:32px 0">
+        <div style="font-size:52px;margin-bottom:16px">✅</div>
+        <div id="import-done-title" style="font-size:17px;font-weight:600;margin-bottom:8px"></div>
+        <div id="import-done-sub" style="color:var(--muted);font-size:13px"></div>
+      </div>
+
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="fecharImport()">Fechar</button>
+      <button class="btn btn-primary" id="import-btn-exec" style="display:none" onclick="executarImportacao()">Importar tudo</button>
     </div>
   </div>
 </div>
@@ -5442,6 +5514,415 @@
     const ok = await api('DELETE', '/inventario/' + id);
     if (ok) { inventario = inventario.filter(x => x.id !== id); renderInventario(); updateInvBadge(); renderDashboard(); showToast('🗑️ Item removido.'); }
   };
+
+  // ── IMPORTAR EXCEL ────────────────────────────────────────
+  let _importDados = null;
+
+  function abrirImport() {
+    const overlay = document.getElementById('import-overlay');
+    overlay.style.display = 'flex';
+    // Popula select de clientes
+    const sel = document.getElementById('import-cliente');
+    sel.innerHTML = '<option value="">Selecionar cliente...</option>'
+      + clients.map(c => `<option value="${c.id}">${c.nome}</option>`).join('');
+    // Reset estado
+    _showImportStep('upload');
+    document.getElementById('import-btn-exec').style.display = 'none';
+    document.getElementById('import-file').value = '';
+    _importDados = null;
+  }
+
+  function fecharImport() {
+    document.getElementById('import-overlay').style.display = 'none';
+  }
+
+  function _showImportStep(step) {
+    ['upload','preview','progress','done'].forEach(s => {
+      document.getElementById('import-step-' + s).style.display = s === step ? 'block' : 'none';
+    });
+  }
+
+  // Detecta o tipo da aba pelo cabeçalho
+  function _detectTipoAba(cols) {
+    const c = cols.map(x => x.toLowerCase());
+    if (c.some(x => x.includes('imei'))) return 'iphone';
+    if (c.some(x => x.includes('e-mail patrimonial') || x.includes('email patrimonial'))) return 'tablet';
+    if (c.some(x => x.includes('ip (principal)') || (x.includes('ip') && x.includes('principal'))) || (c.some(x => x === 'hostname') && c.some(x => x.includes('tipo de m')))) return 'rede';
+    if (c.some(x => x.includes('colaborador')) && c.some(x => x.includes('setor'))) return 'colaboradores';
+    return null;
+  }
+
+  // Busca valor da linha pelo nome parcial da coluna
+  function _v(row, ...alts) {
+    for (const alt of alts) {
+      for (const key of Object.keys(row)) {
+        if (key.toLowerCase().trim().includes(alt.toLowerCase())) {
+          const v = row[key];
+          if (v === null || v === undefined || v === '') return '';
+          return String(v).trim();
+        }
+      }
+    }
+    return '';
+  }
+
+  async function processarExcel(file) {
+    if (!file) return;
+    const clienteId = parseInt(document.getElementById('import-cliente').value);
+    if (!clienteId) { showToast('⚠️ Selecione o cliente antes de escolher o arquivo.'); return; }
+
+    showToast('⏳ Lendo arquivo...');
+    try {
+      const buf = await file.arrayBuffer();
+      const wb = XLSX.read(buf, { type: 'array', cellDates: true });
+
+      const sheets = [];
+      for (const name of wb.SheetNames) {
+        const ws = wb.Sheets[name];
+        const rows = XLSX.utils.sheet_to_json(ws, { defval: '' });
+        if (!rows.length) continue;
+        const cols = Object.keys(rows[0]);
+        const tipo = _detectTipoAba(cols);
+        if (!tipo) continue;
+        sheets.push({ nome: name, tipo, rows });
+      }
+
+      if (!sheets.length) {
+        showToast('⚠️ Nenhuma aba reconhecida. Verifique os cabeçalhos das planilhas.');
+        return;
+      }
+
+      // Colaboradores sempre primeiro (para popular o mapa de usuários)
+      sheets.sort((a, b) => a.tipo === 'colaboradores' ? -1 : b.tipo === 'colaboradores' ? 1 : 0);
+
+      _importDados = { clienteId, sheets };
+      _renderImportPreview();
+    } catch (e) {
+      showToast('❌ Erro ao ler arquivo: ' + e.message);
+    }
+  }
+
+  const _TIPO_INFO = {
+    colaboradores: { icon: '👥', label: 'Colaboradores → Usuários + Notebooks + Monitores' },
+    iphone:        { icon: '📱', label: 'iPhones / Smartphones' },
+    tablet:        { icon: '📱', label: 'Tablets' },
+    rede:          { icon: '🌐', label: 'Rede — IP / Hostname / Antivírus' },
+  };
+
+  function _renderImportPreview() {
+    _showImportStep('preview');
+    document.getElementById('import-btn-exec').style.display = 'inline-block';
+
+    const tabsDiv  = document.getElementById('import-tabs');
+    const bodyDiv  = document.getElementById('import-preview-body');
+    tabsDiv.innerHTML = '';
+    bodyDiv.innerHTML = '';
+
+    _importDados.sheets.forEach((sheet, idx) => {
+      const info  = _TIPO_INFO[sheet.tipo];
+      const cid   = 'imp-content-' + idx;
+
+      // Tab
+      const btn = document.createElement('button');
+      btn.className = 'btn ' + (idx === 0 ? 'btn-primary' : 'btn-ghost');
+      btn.style.cssText = 'font-size:12px;padding:5px 12px';
+      btn.innerHTML = info.icon + ' ' + sheet.nome + ' <span style="opacity:.7">(' + sheet.rows.length + ')</span>';
+      btn.onclick = () => {
+        tabsDiv.querySelectorAll('button').forEach(b => b.className = 'btn btn-ghost');
+        btn.className = 'btn btn-primary';
+        bodyDiv.querySelectorAll(':scope > div').forEach(d => d.style.display = 'none');
+        document.getElementById(cid).style.display = 'block';
+      };
+      tabsDiv.appendChild(btn);
+
+      // Conteúdo
+      const wrap = document.createElement('div');
+      wrap.id = cid;
+      wrap.style.display = idx === 0 ? 'block' : 'none';
+
+      const cols   = Object.keys(sheet.rows[0]).slice(0, 7);
+      const sample = sheet.rows.slice(0, 6);
+      let html = `<div style="font-size:12px;color:var(--muted);margin-bottom:8px">${info.label} — <strong style="color:var(--text)">${sheet.rows.length} registros</strong></div>`;
+      html += '<div style="overflow-x:auto"><table style="font-size:12px;width:100%"><thead><tr>'
+        + cols.map(c => `<th style="padding:6px 10px;text-align:left;color:var(--muted);white-space:nowrap;border-bottom:1px solid var(--border)">${c}</th>`).join('')
+        + '</tr></thead><tbody>';
+      sample.forEach(row => {
+        html += '<tr>' + cols.map(c => {
+          const v = String(row[c] ?? '');
+          return `<td style="padding:5px 10px;white-space:nowrap;max-width:200px;overflow:hidden;text-overflow:ellipsis;border-bottom:1px solid var(--border)">${v}</td>`;
+        }).join('') + '</tr>';
+      });
+      if (sheet.rows.length > 6) html += `<tr><td colspan="${cols.length}" style="padding:6px 10px;color:var(--muted);font-size:11px;text-align:center">... e mais ${sheet.rows.length - 6} registros</td></tr>`;
+      html += '</tbody></table></div>';
+      wrap.innerHTML = html;
+      bodyDiv.appendChild(wrap);
+    });
+  }
+
+  async function executarImportacao() {
+    if (!_importDados) return;
+    const { clienteId, sheets } = _importDados;
+
+    _showImportStep('progress');
+    document.getElementById('import-btn-exec').style.display = 'none';
+
+    const logEl  = document.getElementById('import-log');
+    const barEl  = document.getElementById('import-prog-bar');
+    const pctEl  = document.getElementById('import-prog-pct');
+    const lblEl  = document.getElementById('import-prog-label');
+    logEl.innerHTML = '';
+
+    let total  = sheets.reduce((s, sh) => s + sh.rows.length, 0);
+    let done   = 0;
+    let totUsr = 0, totAtv = 0, totErr = 0;
+
+    function log(msg) { logEl.innerHTML += msg + '<br>'; logEl.scrollTop = logEl.scrollHeight; }
+    function tick(label) {
+      done++;
+      const pct = Math.round((done / total) * 100);
+      barEl.style.width = pct + '%';
+      pctEl.textContent = pct + '%';
+      if (label) lblEl.textContent = label;
+    }
+
+    // Mapa nome-minúsculo → id (começa com usuários já carregados)
+    const uMap = {};
+    usuarios.forEach(u => { uMap[u.nome.toLowerCase().trim()] = u.id; });
+
+    for (const sheet of sheets) {
+      log(`<br><span style="color:var(--accent)">▶ ${sheet.nome} (${_TIPO_INFO[sheet.tipo].label})</span>`);
+
+      // ── COLABORADORES ──────────────────────────────────────
+      if (sheet.tipo === 'colaboradores') {
+        for (const row of sheet.rows) {
+          const nome = _v(row, 'colaborador');
+          if (!nome) { tick(); continue; }
+
+          // Softwares → array
+          const swRaw = _v(row, 'softwares', 'software');
+          const programas = swRaw ? swRaw.split(',').map(s => s.trim()).filter(Boolean) : [];
+
+          let usuarioId = uMap[nome.toLowerCase().trim()];
+          if (!usuarioId) {
+            const res = await api('POST', '/usuarios', {
+              nome,
+              setor:      _v(row, 'setor'),
+              cargo:      _v(row, 'cargo', 'função'),
+              email:      _v(row, 'e-mail', 'email'),
+              gestor:     _v(row, 'gestor'),
+              programas,
+              permissoes: [],
+              status:     'ativo',
+              cliente_id: clienteId,
+            }, true);
+            if (res) {
+              usuarioId = res.id;
+              uMap[nome.toLowerCase().trim()] = usuarioId;
+              usuarios.push(mapUser(res));
+              totUsr++;
+              log(`  ✅ Usuário: <strong>${nome}</strong>`);
+            } else {
+              totErr++;
+              log(`  ❌ Falha usuário: ${nome}`);
+            }
+          } else {
+            log(`  ⏭ Já existe: ${nome}`);
+          }
+
+          // Notebook
+          const pat  = _v(row, 'patrimônio', 'patrimonio');
+          const mod  = _v(row, 'modelo');
+          if (pat && pat !== 'N/A') {
+            const res = await api('POST', '/ativos', {
+              nome:       (mod || 'Notebook') + ' — ' + nome,
+              tipo:       mod || 'Notebook',
+              patrimonio: pat,
+              modelo:     mod,
+              status:     'em_uso',
+              usuario_id: usuarioId || null,
+              cliente_id: clienteId,
+            }, true);
+            if (res) { ativos.push(mapAtivo(res)); totAtv++; log(`  ✅ Notebook: ${pat}`); }
+            else      { totErr++; log(`  ❌ Falha notebook: ${pat}`); }
+          }
+
+          // Monitor 1
+          const m1 = _v(row, 'monitor 1', 'monitor1');
+          if (m1 && m1 !== 'N/A' && m1 !== '') {
+            const res = await api('POST', '/ativos', {
+              nome: 'Monitor — ' + nome, tipo: 'Monitor', patrimonio: m1,
+              status: 'em_uso', usuario_id: usuarioId || null, cliente_id: clienteId,
+            }, true);
+            if (res) { ativos.push(mapAtivo(res)); totAtv++; log(`  ✅ Monitor 1: ${m1}`); }
+            else      { totErr++; log(`  ❌ Falha Monitor 1: ${m1}`); }
+          }
+
+          // Monitor 2
+          const m2 = _v(row, 'monitor 2', 'monitor2');
+          if (m2 && m2 !== 'N/A' && m2 !== '') {
+            const res = await api('POST', '/ativos', {
+              nome: 'Monitor — ' + nome, tipo: 'Monitor', patrimonio: m2,
+              status: 'em_uso', usuario_id: usuarioId || null, cliente_id: clienteId,
+            }, true);
+            if (res) { ativos.push(mapAtivo(res)); totAtv++; log(`  ✅ Monitor 2: ${m2}`); }
+            else      { totErr++; log(`  ❌ Falha Monitor 2: ${m2}`); }
+          }
+
+          tick(nome);
+        }
+      }
+
+      // ── IPHONES ────────────────────────────────────────────
+      else if (sheet.tipo === 'iphone') {
+        for (const row of sheet.rows) {
+          const controle = _v(row, 'controle');
+          const pat      = _v(row, 'patrimônio', 'patrimonio');
+          if (!controle && !pat) { tick(); continue; }
+
+          const obsParts = [];
+          const numMod   = _v(row, 'número do modelo', 'numero do modelo');
+          const versao   = _v(row, 'versão ios', 'versao ios', 'versão', 'ios');
+          const senhaDes = _v(row, 'senha de desbloqueio');
+          const emailGm  = _v(row, 'email gmail', 'gmail/icloud');
+          const senhaGm  = _v(row, 'senha do gmail');
+          const senhaIcl = _v(row, 'senha icloud', 'senha icl');
+          const emailRec = _v(row, 'email de recuperação', 'e-mail de recuperação');
+          const numRec   = _v(row, 'número de recuperação', 'numero de recuperação');
+          const chip     = _v(row, 'numero do chip', 'chip');
+
+          if (numMod)   obsParts.push(`Nº Modelo: ${numMod}`);
+          if (versao)   obsParts.push(`iOS: ${versao}`);
+          if (senhaDes) obsParts.push(`Senha desbloqueio: ${senhaDes}`);
+          if (emailGm)  obsParts.push(`Gmail/iCloud: ${emailGm}`);
+          if (senhaGm)  obsParts.push(`Senha Gmail: ${senhaGm}`);
+          if (senhaIcl) obsParts.push(`Senha iCloud: ${senhaIcl}`);
+          if (emailRec) obsParts.push(`E-mail recuperação: ${emailRec}`);
+          if (numRec)   obsParts.push(`Nº recuperação: ${numRec}`);
+
+          const colabNome = _v(row, 'colaborador');
+          const usuarioId = colabNome ? (uMap[colabNome.toLowerCase().trim()] || null) : null;
+
+          const res = await api('POST', '/ativos', {
+            nome:       controle || ('iPhone — ' + _v(row, 'modelo')),
+            tipo:       'Smartphone',
+            patrimonio: pat,
+            modelo:     _v(row, 'modelo'),
+            hd:         _v(row, 'armazenamento'),
+            serial:     _v(row, 'número de série', 'numero de serie'),
+            imei:       _v(row, 'imei'),
+            chip,
+            status:     'em_uso',
+            usuario_id: usuarioId,
+            cliente_id: clienteId,
+            obs:        obsParts.join('\n'),
+          }, true);
+          if (res) { ativos.push(mapAtivo(res)); totAtv++; log(`  ✅ iPhone: ${controle || pat}`); }
+          else      { totErr++; log(`  ❌ Falha iPhone: ${controle || pat}`); }
+          tick(controle || pat);
+        }
+      }
+
+      // ── TABLETS ────────────────────────────────────────────
+      else if (sheet.tipo === 'tablet') {
+        for (const row of sheet.rows) {
+          const identif  = _v(row, 'identificação', 'identificacao');
+          const equip    = _v(row, 'equipamento');
+          if (!identif && !equip) { tick(); continue; }
+
+          const obsParts = [];
+          const emailP   = _v(row, 'e-mail patrimonial', 'email patrimonial');
+          const senhaA   = _v(row, 'senha de acesso');
+          const licencas = _v(row, 'licenças', 'licencas');
+          if (emailP)   obsParts.push(`E-mail patrimonial: ${emailP}`);
+          if (senhaA)   obsParts.push(`Senha de acesso: ${senhaA}`);
+          if (licencas) obsParts.push(`Licenças: ${licencas}`);
+
+          const colabNome = _v(row, 'colaborador');
+          const usuarioId = colabNome ? (uMap[colabNome.toLowerCase().trim()] || null) : null;
+
+          const res = await api('POST', '/ativos', {
+            nome:       equip || 'Tablet',
+            tipo:       'Tablet',
+            patrimonio: identif,
+            status:     'em_uso',
+            usuario_id: usuarioId,
+            cliente_id: clienteId,
+            obs:        obsParts.join('\n'),
+          }, true);
+          if (res) { ativos.push(mapAtivo(res)); totAtv++; log(`  ✅ Tablet: ${identif}`); }
+          else      { totErr++; log(`  ❌ Falha Tablet: ${identif}`); }
+          tick(identif);
+        }
+      }
+
+      // ── REDE / IP ──────────────────────────────────────────
+      else if (sheet.tipo === 'rede') {
+        for (const row of sheet.rows) {
+          const ip       = _v(row, 'ip (principal)', 'ip principal', 'ip');
+          const hostname = _v(row, 'hostname');
+          if (!ip && !hostname) { tick(); continue; }
+
+          const obsParts = [];
+          const trend    = _v(row, 'trend micro', 'trend');
+          const dataInst = _v(row, 'data da instalação', 'data instalacao');
+          const chave    = _v(row, 'chave pública', 'chave publica');
+          const configPor = _v(row, 'configurado por');
+          if (trend)    obsParts.push(`Trend Micro: ${trend}`);
+          if (dataInst) obsParts.push(`Instalação: ${dataInst}`);
+          if (chave)    obsParts.push(`Chave pública: ${chave}`);
+          if (configPor) obsParts.push(`Configurado por: ${configPor}`);
+
+          const colabNome = _v(row, 'colaborador');
+          const usuarioId = colabNome ? (uMap[colabNome.toLowerCase().trim()] || null) : null;
+          const tipoMaq   = _v(row, 'tipo de máquina', 'tipo de maquina', 'tipo');
+
+          const res = await api('POST', '/ativos', {
+            nome:       hostname || ip,
+            tipo:       tipoMaq || 'Computador',
+            hostname,
+            ip,
+            status:     'em_uso',
+            usuario_id: usuarioId,
+            cliente_id: clienteId,
+            obs:        obsParts.join('\n'),
+          }, true);
+          if (res) { ativos.push(mapAtivo(res)); totAtv++; log(`  ✅ ${tipoMaq || 'PC'}: ${hostname || ip}`); }
+          else      { totErr++; log(`  ❌ Falha: ${hostname || ip}`); }
+          tick(hostname || ip);
+        }
+      }
+    }
+
+    barEl.style.width = '100%';
+    pctEl.textContent = '100%';
+    lblEl.textContent = 'Concluído!';
+
+    renderDashboard(); updateBadge(); updateAtivosBadge(); updateUsuariosBadge();
+
+    setTimeout(() => {
+      _showImportStep('done');
+      document.getElementById('import-done-title').textContent =
+        `${totUsr} usuário${totUsr !== 1 ? 's' : ''} e ${totAtv} ativo${totAtv !== 1 ? 's' : ''} importados`;
+      document.getElementById('import-done-sub').textContent =
+        totErr ? `${totErr} registro${totErr !== 1 ? 's' : ''} com falha — verifique o log acima` : 'Importação concluída sem erros!';
+    }, 600);
+  }
+
+  // Drag-and-drop no dropzone
+  document.addEventListener('DOMContentLoaded', () => {
+    const dz = document.getElementById('import-dropzone');
+    if (!dz) return;
+    dz.addEventListener('click', () => document.getElementById('import-file').click());
+    dz.addEventListener('dragover', e => { e.preventDefault(); dz.style.borderColor = 'var(--accent)'; dz.style.background = 'rgba(79,142,247,0.05)'; });
+    dz.addEventListener('dragleave', () => { dz.style.borderColor = 'var(--border2)'; dz.style.background = ''; });
+    dz.addEventListener('drop', e => {
+      e.preventDefault();
+      dz.style.borderColor = 'var(--border2)'; dz.style.background = '';
+      const f = e.dataTransfer.files[0];
+      if (f) processarExcel(f);
+    });
+  });
+  // ── FIM IMPORTAR EXCEL ────────────────────────────────────
 
   // ── INIT ──────────────────────────────────────────────────
   if (checkSession()) {
