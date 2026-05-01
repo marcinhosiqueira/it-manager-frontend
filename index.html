@@ -501,6 +501,16 @@
   .config-menu-item.active { background: rgba(79,142,247,0.12); color: var(--accent); font-weight: 500; }
   .config-panel { display: none; }
   .config-panel.active { display: block; }
+  .diag-item { display:flex;align-items:flex-start;gap:12px;padding:12px 0;border-bottom:1px solid var(--border) }
+  .diag-item:last-child { border-bottom:none }
+  .diag-dot { width:10px;height:10px;border-radius:50%;flex-shrink:0;margin-top:4px;transition:background .3s }
+  .diag-pending { background:var(--muted);animation:diag-pulse 1s infinite }
+  .diag-ok { background:var(--green) }
+  .diag-warning { background:#f59e0b }
+  .diag-error { background:var(--red) }
+  .diag-label { font-size:13px;font-weight:500;color:var(--text) }
+  .diag-detail { font-size:12px;color:var(--muted);margin-top:3px;line-height:1.4 }
+  @keyframes diag-pulse { 0%,100%{opacity:1}50%{opacity:.35} }
   .config-section {
     background: var(--surface); border: 1px solid var(--border);
     border-radius: var(--radius); overflow: hidden; margin-bottom: 20px;
@@ -1440,6 +1450,7 @@
         <button class="config-menu-item" onclick="showConfigPanel('aparencia', this)">🎨 Aparência</button>
         <button class="config-menu-item" onclick="showConfigPanel('notificacoes', this)">🔔 Notificações</button>
         <button class="config-menu-item" onclick="showConfigPanel('backup', this)">💾 Backup e dados</button>
+        <button class="config-menu-item" onclick="showConfigPanel('diagnostico', this)">🔧 Diagnóstico</button>
         <button class="config-menu-item" onclick="showConfigPanel('sobre', this)">ℹ️ Sobre</button>
       </div>
 
@@ -1695,6 +1706,41 @@
                 <div style="font-size:13px;font-weight:600;color:var(--red);margin-bottom:6px">⚠️ Zona de perigo</div>
                 <div style="font-size:13px;color:var(--muted);margin-bottom:12px">Estas ações são irreversíveis. Faça um backup antes de prosseguir.</div>
                 <button class="btn" style="background:rgba(244,86,106,0.15);color:var(--red);border:1px solid rgba(244,86,106,0.3)" onclick="limparDados()">🗑️ Limpar todos os dados locais</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- DIAGNÓSTICO -->
+        <div class="config-panel" id="config-diagnostico">
+          <div class="config-section">
+            <div class="config-section-header">
+              <div class="config-section-title">🔧 Diagnóstico & Reparo</div>
+            </div>
+            <div class="config-section-body">
+              <p style="font-size:13px;color:var(--muted);margin:0 0 16px">Verifica cada módulo em busca de erros, dados desincronizados e inconsistências de referência. Para os problemas encontrados, oferece reparos automáticos seguros.</p>
+              <button class="btn btn-primary" id="diag-run-btn" onclick="executarDiagnostico()" style="width:100%;justify-content:center">▶ Executar diagnóstico</button>
+
+              <div id="diag-results" style="display:none;margin-top:20px">
+                <div class="diag-item" id="diag-api"><div class="diag-dot diag-pending"></div><div><div class="diag-label">Conectividade com a API</div><div class="diag-detail">aguardando...</div></div></div>
+                <div class="diag-item" id="diag-auth"><div class="diag-dot diag-pending"></div><div><div class="diag-label">Autenticação (token)</div><div class="diag-detail">aguardando...</div></div></div>
+                <div class="diag-item" id="diag-clientes"><div class="diag-dot diag-pending"></div><div><div class="diag-label">Módulo Clientes</div><div class="diag-detail">aguardando...</div></div></div>
+                <div class="diag-item" id="diag-ativos"><div class="diag-dot diag-pending"></div><div><div class="diag-label">Módulo Ativos</div><div class="diag-detail">aguardando...</div></div></div>
+                <div class="diag-item" id="diag-usuarios"><div class="diag-dot diag-pending"></div><div><div class="diag-label">Módulo Usuários</div><div class="diag-detail">aguardando...</div></div></div>
+                <div class="diag-item" id="diag-inventario"><div class="diag-dot diag-pending"></div><div><div class="diag-label">Módulo Inventário</div><div class="diag-detail">aguardando...</div></div></div>
+                <div class="diag-item" id="diag-int_pat"><div class="diag-dot diag-pending"></div><div><div class="diag-label">Integridade: Usuários → Patrimônio</div><div class="diag-detail">aguardando...</div></div></div>
+                <div class="diag-item" id="diag-int_usr"><div class="diag-dot diag-pending"></div><div><div class="diag-label">Integridade: Equipamentos → Usuário</div><div class="diag-detail">aguardando...</div></div></div>
+                <div class="diag-item" id="diag-frontend"><div class="diag-dot diag-pending"></div><div><div class="diag-label">Estado do frontend</div><div class="diag-detail">aguardando...</div></div></div>
+              </div>
+
+              <div id="diag-summary" style="display:none;margin-top:16px;padding:16px;border-radius:10px;background:var(--surface2);border:1px solid var(--border);text-align:center">
+                <div id="diag-summary-text"></div>
+              </div>
+
+              <div id="diag-repair-section" style="display:none;margin-top:16px">
+                <div style="font-size:13px;font-weight:500;margin-bottom:8px;color:var(--text)">Reparos disponíveis:</div>
+                <div id="diag-repair-list" style="border:1px solid var(--border);border-radius:8px;overflow:hidden;padding:0 12px;margin-bottom:12px"></div>
+                <button class="btn btn-primary" id="diag-apply-btn" onclick="aplicarReparos()" style="width:100%;justify-content:center">🔧 Aplicar todos os reparos</button>
               </div>
             </div>
           </div>
@@ -2910,6 +2956,7 @@
     if (id === 'clientes') renderClients();
     if (id === 'dashboard') renderDashboard();
     if (id === 'ativos') { populateClienteSelects(); renderAtivos(); }
+    if (id === 'inventario') { populateInvSelects(); renderInventario(); }
     if (id === 'usuarios') { populateUserSelects(); renderUsuarios(); }
     if (id === 'permissoes') { populatePermSelects(); renderPermissoes(); }
     if (id === 'antivirus') { populateAvSelects(); renderAntivirus(); }
@@ -3083,6 +3130,7 @@
 
   // ── ATIVOS (unificado com inventário) ───────────────────
   let ativos = [];
+  let inventario = [];
   let editingAtivoId = null;
   let selectedAtivoTipo = '';
 
@@ -5389,17 +5437,19 @@
 
   async function loadAll() {
     showToast('⏳ Carregando dados...');
-    const [c, a, u] = await Promise.all([
-      api('GET', '/clientes', null, true),
-      api('GET', '/ativos',   null, true),
-      api('GET', '/usuarios', null, true),
+    const [c, a, u, inv] = await Promise.all([
+      api('GET', '/clientes',   null, true),
+      api('GET', '/ativos',     null, true),
+      api('GET', '/usuarios',   null, true),
+      api('GET', '/inventario', null, true),
     ]);
-    if (c) clients  = c;
-    if (a) ativos   = a.map(mapAtivo);
-    if (u) usuarios = u.map(mapUser);
+    if (c)   clients   = c;
+    if (a)   ativos    = a.map(mapAtivo);
+    if (u)   usuarios  = u.map(mapUser);
+    if (inv) inventario = inv.map(x => ({ ...x, clienteId: x.cliente_id, usuarioId: x.usuario_id }));
     renderDashboard();
-    updateBadge(); updateAtivosBadge(); updateUsuariosBadge();
-    const failed = [!c && 'clientes', !a && 'ativos', !u && 'usuários'].filter(Boolean);
+    updateBadge(); updateAtivosBadge(); updateUsuariosBadge(); updateInvBadge();
+    const failed = [!c && 'clientes', !a && 'ativos', !u && 'usuários', !inv && 'inventário'].filter(Boolean);
     if (failed.length) showToast('⚠️ Falha ao carregar: ' + failed.join(', '));
     else showToast('✅ Dados carregados!');
   }
@@ -5566,6 +5616,179 @@
     const ok = await api('DELETE', '/inventario/' + id);
     if (ok) { inventario = inventario.filter(x => x.id !== id); renderInventario(); updateInvBadge(); renderDashboard(); showToast('🗑️ Item removido.'); }
   };
+
+  // ── DIAGNÓSTICO & REPARO ──────────────────────────────────
+  let _diagRepairs = [];
+
+  async function executarDiagnostico() {
+    _diagRepairs = [];
+    const btn = document.getElementById('diag-run-btn');
+    btn.disabled = true;
+    btn.textContent = '⏳ Executando...';
+    document.getElementById('diag-results').style.display = 'block';
+    document.getElementById('diag-summary').style.display = 'none';
+    document.getElementById('diag-repair-section').style.display = 'none';
+
+    document.querySelectorAll('#diag-results .diag-dot').forEach(d => d.className = 'diag-dot diag-pending');
+    document.querySelectorAll('#diag-results .diag-detail').forEach(d => d.textContent = 'verificando...');
+
+    function setStatus(id, status, detail) {
+      const el = document.getElementById('diag-' + id);
+      if (!el) return;
+      el.querySelector('.diag-dot').className = 'diag-dot diag-' + status;
+      el.querySelector('.diag-detail').textContent = detail;
+    }
+    const delay = ms => new Promise(r => setTimeout(r, ms));
+
+    // 1. Conectividade com a API
+    await delay(80);
+    let apiOk = false;
+    try {
+      const ctrl = new AbortController();
+      const t = setTimeout(() => ctrl.abort(), 8000);
+      const r = await fetch(API + '/health', { signal: ctrl.signal });
+      clearTimeout(t);
+      if (r.ok) {
+        const data = await r.json();
+        const failing = Object.entries(data).filter(([,v]) => !v.ok).map(([k]) => k);
+        if (!failing.length) { setStatus('api', 'ok', 'API respondendo · todas as tabelas acessíveis'); apiOk = true; }
+        else setStatus('api', 'error', 'Tabelas com problema: ' + failing.join(', '));
+      } else { setStatus('api', 'error', 'HTTP ' + r.status); }
+    } catch(e) { setStatus('api', 'error', 'Sem resposta · verifique a conexão'); }
+
+    // 2. Autenticação
+    await delay(120);
+    try {
+      const r = await api('GET', '/clientes', null, true);
+      if (r !== null) { setStatus('auth', 'ok', 'Token válido e aceito pelo servidor'); }
+      else {
+        setStatus('auth', 'error', 'Token expirado ou inválido · faça login novamente');
+        _diagRepairs.push({ label: 'Forçar novo login', fn: () => logout() });
+      }
+    } catch(e) { setStatus('auth', 'error', 'Falha na verificação do token'); }
+
+    // 3–6. Módulos: comparar local vs servidor
+    const mapInv = x => ({ ...x, clienteId: x.cliente_id, usuarioId: x.usuario_id });
+    const modulos = [
+      { id: 'clientes',   path: '/clientes',   local: clients,    map: x=>x,      apply: d => { clients = d; updateBadge(); renderClients(); renderDashboard(); },              nome: 'Clientes'   },
+      { id: 'ativos',     path: '/ativos',     local: ativos,     map: mapAtivo,  apply: d => { ativos = d.map(mapAtivo); updateAtivosBadge(); renderAtivos(); renderDashboard(); }, nome: 'Ativos'     },
+      { id: 'usuarios',   path: '/usuarios',   local: usuarios,   map: mapUser,   apply: d => { usuarios = d.map(mapUser); updateUsuariosBadge(); renderUsuarios(); },          nome: 'Usuários'   },
+      { id: 'inventario', path: '/inventario', local: inventario, map: mapInv,    apply: d => { inventario = d.map(mapInv); updateInvBadge(); renderInventario(); },            nome: 'Inventário' },
+    ];
+    for (const mod of modulos) {
+      await delay(150);
+      const data = await api('GET', mod.path, null, true);
+      if (data === null) { setStatus(mod.id, 'error', 'Falha ao buscar dados do servidor'); continue; }
+      const diff = data.length - mod.local.length;
+      if (diff === 0) {
+        setStatus(mod.id, 'ok', `${data.length} registro${data.length !== 1 ? 's' : ''} · sincronizado`);
+      } else {
+        setStatus(mod.id, 'warning', `Servidor: ${data.length} · Local: ${mod.local.length} · dessincronizado`);
+        const snap = data, applyFn = mod.apply;
+        _diagRepairs.push({ label: `Ressincronizar ${mod.nome} (${data.length} registros do servidor)`, fn: () => applyFn(snap) });
+      }
+    }
+
+    // 7. Integridade: usuário → patrimônio
+    await delay(150);
+    const ativoIds = new Set(ativos.map(a => a.id));
+    const patBroken = usuarios.filter(u => u.patrimonioId && !ativoIds.has(+u.patrimonioId));
+    if (!patBroken.length) {
+      setStatus('int_pat', 'ok', 'Todos os vínculos usuário → patrimônio são válidos');
+    } else {
+      const nomes = patBroken.slice(0,3).map(u => u.nome).join(', ') + (patBroken.length > 3 ? '…' : '');
+      setStatus('int_pat', 'warning', `${patBroken.length} usuário${patBroken.length!==1?'s':''} com patrimônio inexistente: ${nomes}`);
+      const broken = [...patBroken];
+      _diagRepairs.push({
+        label: `Limpar ${broken.length} referência${broken.length!==1?'s':''} de patrimônio inválida${broken.length!==1?'s':''}`,
+        fn: async () => {
+          for (const u of broken) {
+            const body = { nome:u.nome, cargo:u.cargo||'', email:u.email||'', email2:u.email2||'', tel:u.tel||'', setor:u.setor||'', gestor:u.gestor||'', admissao:u.admissao||'', login:u.login||'', obs:u.obs||'', status:u.status||'ativo', programas:u.programas||[], permissoes:u.permissoes||[], patrimonio_id:null, cliente_id:u.clienteId };
+            const res = await api('PUT', '/usuarios/' + u.id, body, true);
+            if (res) u.patrimonioId = null;
+          }
+          renderUsuarios();
+        }
+      });
+    }
+
+    // 8. Integridade: equipamentos → usuário
+    await delay(150);
+    const userIds = new Set(usuarios.map(u => u.id));
+    const ativBroken = ativos.filter(a => a.usuarioId && !userIds.has(+a.usuarioId));
+    const invBroken  = inventario.filter(i => i.usuarioId && !userIds.has(+i.usuarioId));
+    const totEqBroken = ativBroken.length + invBroken.length;
+    if (!totEqBroken) {
+      setStatus('int_usr', 'ok', 'Todos os vínculos equipamento → usuário são válidos');
+    } else {
+      setStatus('int_usr', 'warning', `${totEqBroken} equipamento${totEqBroken!==1?'s':''} com usuário inexistente`);
+      const ab = [...ativBroken], ib = [...invBroken];
+      _diagRepairs.push({
+        label: `Limpar ${totEqBroken} vínculo${totEqBroken!==1?'s':''} de usuário inválido${totEqBroken!==1?'s':''}`,
+        fn: async () => {
+          for (const a of ab) {
+            const body = { nome:a.nome, tipo:a.tipo, patrimonio:a.patrimonio||'', marca:a.marca||'', modelo:a.modelo||'', serial:a.serial||'', aquisicao:a.aquisicao||'', cpu:a.cpu||'', ram:a.ram||'', hd:a.hd||'', so:a.so||'', imei:a.imei||'', chip:a.chip||'', hostname:a.hostname||'', ip:a.ip||'', status:a.status||'em_uso', usuario_id:null, cliente_id:a.clienteId, local:a.local||'', garantia:a.garantia||'', obs:a.obs||'' };
+            const res = await api('PUT', '/ativos/' + a.id, body, true);
+            if (res) a.usuarioId = null;
+          }
+          for (const i of ib) {
+            const body = { patrimonio:i.patrimonio, tipo:i.tipo, marca:i.marca||'', modelo:i.modelo||'', serial:i.serial||'', aquisicao:i.aquisicao||'', cpu:i.cpu||'', ram:i.ram||'', hd:i.hd||'', so:i.so||'', imei:i.imei||'', chip:i.chip||'', status:i.status||'em_uso', usuario_id:null, cliente_id:i.clienteId, local:i.local||'', garantia:i.garantia||'', obs:i.obs||'' };
+            const res = await api('PUT', '/inventario/' + i.id, body, true);
+            if (res) i.usuarioId = null;
+          }
+          renderAtivos(); renderInventario();
+        }
+      });
+    }
+
+    // 9. Estado do frontend
+    await delay(100);
+    const stuckSel = Object.entries(_sel).filter(([,s]) => s.size > 0).map(([k]) => k);
+    if (!stuckSel.length) {
+      setStatus('frontend', 'ok', 'Estado do frontend sem problemas detectados');
+    } else {
+      setStatus('frontend', 'warning', 'Seleções travadas em: ' + stuckSel.join(', '));
+      _diagRepairs.push({ label: 'Limpar seleções travadas (' + stuckSel.join(', ') + ')', fn: () => Object.keys(_sel).forEach(k => { _sel[k].clear(); _updateBulkBar(k); }) });
+    }
+
+    // Resumo
+    let cOk = 0, cWarn = 0, cErr = 0;
+    document.querySelectorAll('#diag-results .diag-dot').forEach(d => {
+      if (d.classList.contains('diag-ok')) cOk++;
+      else if (d.classList.contains('diag-warning')) cWarn++;
+      else if (d.classList.contains('diag-error')) cErr++;
+    });
+    const icon = cErr > 0 ? '❌' : cWarn > 0 ? '⚠️' : '✅';
+    const color = cErr > 0 ? 'var(--red)' : cWarn > 0 ? '#f59e0b' : 'var(--green)';
+    const msg = cErr > 0 ? `${cErr} erro${cErr!==1?'s':''} encontrado${cErr!==1?'s':''}` : cWarn > 0 ? `${cWarn} aviso${cWarn!==1?'s':''} — sistema funcional com ressalvas` : 'Sistema sem problemas detectados';
+    document.getElementById('diag-summary-text').innerHTML = `<div style="font-size:32px;margin-bottom:8px">${icon}</div><div style="font-weight:600;font-size:15px;color:${color}">${msg}</div><div style="font-size:12px;color:var(--muted);margin-top:4px">${cOk} ok · ${cWarn} avisos · ${cErr} erros</div>`;
+    document.getElementById('diag-summary').style.display = 'block';
+
+    if (_diagRepairs.length) {
+      document.getElementById('diag-repair-list').innerHTML = _diagRepairs.map(r =>
+        `<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px"><span style="font-size:16px">🔧</span>${r.label}</div>`
+      ).join('');
+      document.getElementById('diag-repair-section').style.display = 'block';
+    }
+
+    btn.disabled = false;
+    btn.textContent = '▶ Executar diagnóstico novamente';
+  }
+
+  async function aplicarReparos() {
+    if (!_diagRepairs.length) return;
+    const btn = document.getElementById('diag-apply-btn');
+    btn.disabled = true;
+    btn.textContent = '⏳ Aplicando reparos...';
+    for (const r of _diagRepairs) {
+      try { await r.fn(); } catch(e) { console.error('Reparo falhou:', r.label, e); }
+    }
+    renderDashboard();
+    showToast('✅ Reparos aplicados com sucesso!');
+    btn.textContent = '✅ Concluído';
+    setTimeout(() => executarDiagnostico(), 900);
+  }
+  // ── FIM DIAGNÓSTICO ───────────────────────────────────────
 
   // ── SELEÇÃO E EXCLUSÃO EM MASSA ───────────────────────────
   const _sel = { ativos: new Set(), usuarios: new Set(), inventario: new Set(), clientes: new Set() };
