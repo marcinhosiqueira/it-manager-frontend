@@ -606,6 +606,10 @@
     border-radius: 6px; padding: 3px 10px; font-size: 12px;
     font-weight: 600; font-family: var(--mono);
   }
+  input.row-chk { width:15px;height:15px;accent-color:var(--accent);cursor:pointer;flex-shrink:0;vertical-align:middle }
+  .bulk-bar { display:none;align-items:center;gap:10px;padding:9px 14px;margin-bottom:10px;background:rgba(79,142,247,0.08);border:1px solid rgba(79,142,247,0.2);border-radius:8px;font-size:13px }
+  .bulk-bar.show { display:flex }
+  .bulk-bar .bulk-count { color:var(--accent);font-weight:600;min-width:90px }
 </style>
 <script src="xlsx.full.min.js"></script>
 </head>
@@ -806,12 +810,21 @@
       <button class="btn btn-primary" onclick="openModal()">+ Novo cliente</button>
     </div>
 
-    <div class="filters">
+    <div class="filters" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      <div class="topbar-search" style="width:230px">
+        <span style="color:var(--muted)">🔍</span>
+        <input type="text" id="cli-search" placeholder="Nome, CNPJ, responsável..." oninput="renderClients()"/>
+      </div>
       <button class="filter-btn active" onclick="filterClients('todos', this)">Todos</button>
       <button class="filter-btn" onclick="filterClients('ativo', this)">Ativos</button>
       <button class="filter-btn" onclick="filterClients('inativo', this)">Inativos</button>
     </div>
 
+    <div class="bulk-bar" id="bulk-bar-clientes">
+      <span class="bulk-count"></span>
+      <button class="btn" style="font-size:12px;padding:5px 12px;background:rgba(244,86,106,0.1);border:1px solid rgba(244,86,106,0.3);color:var(--red)" onclick="bulkDeleteClientes()">🗑️ Excluir selecionados</button>
+      <button class="btn btn-ghost" style="font-size:12px;padding:5px 12px" onclick="_clearSel('clientes')">✕ Desmarcar</button>
+    </div>
     <div class="clients-grid" id="clients-grid">
       <div style="grid-column:1/-1">
         <div class="empty">
@@ -883,10 +896,16 @@
         <option value="descartado">Descartado</option>
       </select>
     </div>
+    <div class="bulk-bar" id="bulk-bar-ativos">
+      <span class="bulk-count"></span>
+      <button class="btn" style="font-size:12px;padding:5px 12px;background:rgba(244,86,106,0.1);border:1px solid rgba(244,86,106,0.3);color:var(--red)" onclick="bulkDeleteAtivos()">🗑️ Excluir selecionados</button>
+      <button class="btn btn-ghost" style="font-size:12px;padding:5px 12px" onclick="_clearSel('ativos')">✕ Desmarcar</button>
+    </div>
     <div class="ativos-table-wrap">
       <table>
         <thead><tr>
-          <th style="padding-left:20px">Patrimônio</th>
+          <th style="width:38px;padding-left:14px"><input type="checkbox" class="row-chk" id="chk-all-ativos" onchange="_toggleAllVisible('ativos','ativos-tbody',this.checked)"></th>
+          <th style="padding-left:8px">Patrimônio</th>
           <th>Equipamento</th>
           <th>Cliente</th>
           <th>Tipo</th>
@@ -928,10 +947,16 @@
         <option value="afastado">Afastado</option>
       </select>
     </div>
+    <div class="bulk-bar" id="bulk-bar-usuarios">
+      <span class="bulk-count"></span>
+      <button class="btn" style="font-size:12px;padding:5px 12px;background:rgba(244,86,106,0.1);border:1px solid rgba(244,86,106,0.3);color:var(--red)" onclick="bulkDeleteUsuarios()">🗑️ Excluir selecionados</button>
+      <button class="btn btn-ghost" style="font-size:12px;padding:5px 12px" onclick="_clearSel('usuarios')">✕ Desmarcar</button>
+    </div>
     <div class="ativos-table-wrap">
       <table>
         <thead><tr>
-          <th style="padding-left:20px">Funcionário</th>
+          <th style="width:38px;padding-left:14px"><input type="checkbox" class="row-chk" id="chk-all-usuarios" onchange="_toggleAllVisible('usuarios','usuarios-tbody',this.checked)"></th>
+          <th style="padding-left:8px">Funcionário</th>
           <th>E-mail</th>
           <th>Cargo</th>
           <th>Setor</th>
@@ -1003,10 +1028,16 @@
       </select>
     </div>
 
+    <div class="bulk-bar" id="bulk-bar-inventario">
+      <span class="bulk-count"></span>
+      <button class="btn" style="font-size:12px;padding:5px 12px;background:rgba(244,86,106,0.1);border:1px solid rgba(244,86,106,0.3);color:var(--red)" onclick="bulkDeleteInventario()">🗑️ Excluir selecionados</button>
+      <button class="btn btn-ghost" style="font-size:12px;padding:5px 12px" onclick="_clearSel('inventario')">✕ Desmarcar</button>
+    </div>
     <div class="ativos-table-wrap">
       <table>
         <thead><tr>
-          <th style="padding-left:20px">Patrimônio</th>
+          <th style="width:38px;padding-left:14px"><input type="checkbox" class="row-chk" id="chk-all-inventario" onchange="_toggleAllVisible('inventario','inv-tbody',this.checked)"></th>
+          <th style="padding-left:8px">Patrimônio</th>
           <th>Tipo</th>
           <th>Equipamento</th>
           <th>Cliente</th>
@@ -2930,17 +2961,23 @@
 
   function renderClients() {
     const grid = document.getElementById('clients-grid');
-    const filtered = clients.filter(c => currentFilter === 'todos' || c.status === currentFilter);
+    const search = (document.getElementById('cli-search')?.value || '').toLowerCase();
+    const filtered = clients.filter(c => {
+      if (currentFilter !== 'todos' && c.status !== currentFilter) return false;
+      if (search && !(c.nome||'').toLowerCase().includes(search) && !(c.cnpj||'').toLowerCase().includes(search) && !(c.resp||'').toLowerCase().includes(search) && !(c.email||'').toLowerCase().includes(search)) return false;
+      return true;
+    });
     if (!filtered.length) {
       grid.innerHTML = `<div style="grid-column:1/-1"><div class="empty">
         <div class="empty-icon">👥</div>
-        <div class="empty-text">${currentFilter === 'todos' ? 'Nenhum cliente ainda. Clique em <strong>+ Novo cliente</strong> para começar.' : 'Nenhum cliente ' + currentFilter + '.'}</div>
+        <div class="empty-text">${!clients.length ? 'Nenhum cliente ainda. Clique em <strong>+ Novo cliente</strong> para começar.' : 'Nenhum resultado para os filtros.'}</div>
       </div></div>`;
       return;
     }
     grid.innerHTML = filtered.map((c,i) => `
-      <div class="client-card">
-        <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px">
+      <div class="client-card" style="position:relative">
+        <div style="position:absolute;top:10px;left:10px;z-index:2" onclick="event.stopPropagation()"><input type="checkbox" class="row-chk" value="${c.id}" ${_sel.clientes.has(c.id)?'checked':''} onchange="_toggleSel('clientes',${c.id},this.checked)"></div>
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px;padding-left:24px">
           <div class="client-avatar" style="background:${getColor(c.nome)}">${getInitials(c.nome)}</div>
           <div style="display:flex;gap:4px">
             <button class="action-btn" onclick="openModal(${c.id})" title="Editar">✏️</button>
@@ -3119,7 +3156,7 @@
     });
 
     if (!list.length) {
-      tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:40px">
+      tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;color:var(--muted);padding:40px">
         ${ativos.length ? 'Nenhum resultado para os filtros.' : 'Nenhum ativo cadastrado. Clique em <strong>+ Novo ativo</strong>.'}
       </td></tr>`;
       return;
@@ -3128,6 +3165,7 @@
     tbody.innerHTML = list.map(a => {
       const usuario = a.usuarioId ? usuarios.find(u => String(u.id) === String(a.usuarioId)) : null;
       return `<tr>
+        <td style="width:38px;padding-left:14px" onclick="event.stopPropagation()"><input type="checkbox" class="row-chk" value="${a.id}" ${_sel.ativos.has(a.id)?'checked':''} onchange="_toggleSel('ativos',${a.id},this.checked)"></td>
         <td style="padding-left:20px"><span class="patrimonio-badge">${a.patrimonio||'—'}</span></td>
         <td>
           <div style="display:flex;align-items:center;gap:8px">
@@ -4787,7 +4825,7 @@
     });
 
     if (!list.length) {
-      tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:40px">
+      tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;color:var(--muted);padding:40px">
         ${inventario.length ? 'Nenhum resultado para os filtros.' : 'Nenhum item cadastrado. Clique em <strong>+ Novo item</strong>.'}
       </td></tr>`;
       return;
@@ -4796,6 +4834,7 @@
     tbody.innerHTML = list.map(i => {
       const usuario = i.usuarioId ? usuarios.find(u => String(u.id) === String(i.usuarioId)) : null;
       return `<tr>
+        <td style="width:38px;padding-left:14px" onclick="event.stopPropagation()"><input type="checkbox" class="row-chk" value="${i.id}" ${_sel.inventario.has(i.id)?'checked':''} onchange="_toggleSel('inventario',${i.id},this.checked)"></td>
         <td style="padding-left:20px">
           <span class="patrimonio-badge">${i.patrimonio||'—'}</span>
         </td>
@@ -5032,7 +5071,7 @@
     });
 
     if (!list.length) {
-      tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:40px">
+      tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;color:var(--muted);padding:40px">
         ${usuarios.length ? 'Nenhum resultado para os filtros.' : 'Nenhum usuário cadastrado. Clique em <strong>+ Novo usuário</strong>.'}
       </td></tr>`;
       return;
@@ -5045,6 +5084,7 @@
       const statusLabel = { ativo:'Ativo', inativo:'Inativo', ferias:'Férias', afastado:'Afastado' };
       const patrimonio = u.patrimonioId ? ativos.find(a => String(a.id) === String(u.patrimonioId)) : null;
       return `<tr style="cursor:pointer" onclick="openDetailPanel(${u.id})">
+        <td style="width:38px;padding-left:14px" onclick="event.stopPropagation()"><input type="checkbox" class="row-chk" value="${u.id}" ${_sel.usuarios.has(u.id)?'checked':''} onchange="_toggleSel('usuarios',${u.id},this.checked)"></td>
         <td style="padding-left:20px">
           <div style="display:flex;align-items:center;gap:10px">
             <div class="user-avatar" style="background:${cor}">${ini}</div>
@@ -5526,6 +5566,86 @@
     const ok = await api('DELETE', '/inventario/' + id);
     if (ok) { inventario = inventario.filter(x => x.id !== id); renderInventario(); updateInvBadge(); renderDashboard(); showToast('🗑️ Item removido.'); }
   };
+
+  // ── SELEÇÃO E EXCLUSÃO EM MASSA ───────────────────────────
+  const _sel = { ativos: new Set(), usuarios: new Set(), inventario: new Set(), clientes: new Set() };
+
+  function _toggleSel(mod, id, checked) {
+    if (checked) _sel[mod].add(id); else _sel[mod].delete(id);
+    _updateBulkBar(mod);
+  }
+
+  function _toggleAllVisible(mod, tbodyId, checked) {
+    const chks = document.querySelectorAll('#' + tbodyId + ' .row-chk');
+    chks.forEach(c => { c.checked = checked; if (checked) _sel[mod].add(+c.value); else _sel[mod].delete(+c.value); });
+    _updateBulkBar(mod);
+  }
+
+  function _updateBulkBar(mod) {
+    const n = _sel[mod].size;
+    const bar = document.getElementById('bulk-bar-' + mod);
+    if (!bar) return;
+    bar.classList.toggle('show', n > 0);
+    bar.querySelector('.bulk-count').textContent = n > 0 ? `${n} selecionado${n !== 1 ? 's' : ''}` : '';
+    const ca = document.getElementById('chk-all-' + mod);
+    if (ca) { ca.indeterminate = n > 0; ca.checked = false; }
+  }
+
+  function _clearSel(mod) {
+    _sel[mod].clear();
+    document.querySelectorAll('#bulk-bar-' + mod).forEach(b => b.classList.remove('show'));
+    const ca = document.getElementById('chk-all-' + mod);
+    if (ca) { ca.checked = false; ca.indeterminate = false; }
+    if (mod === 'ativos')     renderAtivos();
+    else if (mod === 'usuarios')   renderUsuarios();
+    else if (mod === 'inventario') renderInventario();
+    else if (mod === 'clientes')   renderClients();
+  }
+
+  async function bulkDeleteAtivos() {
+    const ids = [..._sel.ativos];
+    if (!ids.length || !confirm(`Excluir ${ids.length} ativo${ids.length !== 1 ? 's' : ''}?`)) return;
+    let ok = 0;
+    for (const id of ids) { if (await api('DELETE', '/ativos/' + id, null, true)) ok++; }
+    _sel.ativos.clear();
+    ativos = ativos.filter(x => !ids.includes(x.id));
+    renderAtivos(); updateAtivosBadge(); renderDashboard();
+    showToast(`🗑️ ${ok} ativo${ok !== 1 ? 's' : ''} removido${ok !== 1 ? 's' : ''}.`);
+  }
+
+  async function bulkDeleteUsuarios() {
+    const ids = [..._sel.usuarios];
+    if (!ids.length || !confirm(`Excluir ${ids.length} usuário${ids.length !== 1 ? 's' : ''}?`)) return;
+    let ok = 0;
+    for (const id of ids) { if (await api('DELETE', '/usuarios/' + id, null, true)) ok++; }
+    _sel.usuarios.clear();
+    usuarios = usuarios.filter(x => !ids.includes(x.id));
+    renderUsuarios(); updateUsuariosBadge(); renderDashboard();
+    showToast(`🗑️ ${ok} usuário${ok !== 1 ? 's' : ''} removido${ok !== 1 ? 's' : ''}.`);
+  }
+
+  async function bulkDeleteInventario() {
+    const ids = [..._sel.inventario];
+    if (!ids.length || !confirm(`Excluir ${ids.length} item${ids.length !== 1 ? 's' : ''}?`)) return;
+    let ok = 0;
+    for (const id of ids) { if (await api('DELETE', '/inventario/' + id, null, true)) ok++; }
+    _sel.inventario.clear();
+    inventario = inventario.filter(x => !ids.includes(x.id));
+    renderInventario(); updateInvBadge(); renderDashboard();
+    showToast(`🗑️ ${ok} item${ok !== 1 ? 's' : ''} removido${ok !== 1 ? 's' : ''}.`);
+  }
+
+  async function bulkDeleteClientes() {
+    const ids = [..._sel.clientes];
+    if (!ids.length || !confirm(`Excluir ${ids.length} cliente${ids.length !== 1 ? 's' : ''}?\nIsso removerá todos os ativos e usuários vinculados.`)) return;
+    let ok = 0;
+    for (const id of ids) { if (await api('DELETE', '/clientes/' + id, null, true)) ok++; }
+    _sel.clientes.clear();
+    clients = clients.filter(x => !ids.includes(x.id));
+    renderClients(); updateBadge(); renderDashboard();
+    showToast(`🗑️ ${ok} cliente${ok !== 1 ? 's' : ''} removido${ok !== 1 ? 's' : ''}.`);
+  }
+  // ── FIM SELEÇÃO E EXCLUSÃO EM MASSA ───────────────────────
 
   // ── IMPORTAR EXCEL ────────────────────────────────────────
   let _importDados = null;
