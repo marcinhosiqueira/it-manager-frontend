@@ -501,6 +501,14 @@
   .config-menu-item.active { background: rgba(79,142,247,0.12); color: var(--accent); font-weight: 500; }
   .config-panel { display: none; }
   .config-panel.active { display: block; }
+  th.sortable { cursor:pointer;user-select:none;white-space:nowrap;transition:color .15s }
+  th.sortable:hover { color:var(--accent) }
+  th.sortable .si { font-size:10px;margin-left:3px;opacity:.45;vertical-align:middle }
+  th.sortable.sort-asc .si, th.sortable.sort-desc .si { opacity:1;color:var(--accent) }
+  th.sortable.sort-asc, th.sortable.sort-desc { color:var(--accent) }
+  .sort-pill { display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:20px;font-size:12px;cursor:pointer;border:1px solid var(--border);background:var(--surface2);color:var(--muted);transition:all .15s;user-select:none }
+  .sort-pill:hover { color:var(--text);border-color:var(--accent) }
+  .sort-pill.sort-asc,.sort-pill.sort-desc { background:rgba(79,142,247,.1);border-color:var(--accent);color:var(--accent);font-weight:500 }
   .diag-item { display:flex;align-items:flex-start;gap:12px;padding:12px 0;border-bottom:1px solid var(--border) }
   .diag-item:last-child { border-bottom:none }
   .diag-dot { width:10px;height:10px;border-radius:50%;flex-shrink:0;margin-top:4px;transition:background .3s }
@@ -828,6 +836,12 @@
       <button class="filter-btn active" onclick="filterClients('todos', this)">Todos</button>
       <button class="filter-btn" onclick="filterClients('ativo', this)">Ativos</button>
       <button class="filter-btn" onclick="filterClients('inativo', this)">Inativos</button>
+      <div style="display:flex;align-items:center;gap:6px;margin-left:8px;border-left:1px solid var(--border);padding-left:12px">
+        <span style="font-size:12px;color:var(--muted)">Ordenar:</span>
+        <span class="sort-pill" id="si-clientes-nome" onclick="_toggleSort('clientes','nome')">Nome <span class="si">⇅</span></span>
+        <span class="sort-pill" id="si-clientes-segmento" onclick="_toggleSort('clientes','segmento')">Segmento <span class="si">⇅</span></span>
+        <span class="sort-pill" id="si-clientes-status" onclick="_toggleSort('clientes','status')">Status <span class="si">⇅</span></span>
+      </div>
     </div>
 
     <div class="bulk-bar" id="bulk-bar-clientes">
@@ -915,13 +929,13 @@
       <table>
         <thead><tr>
           <th style="width:38px;padding-left:14px"><input type="checkbox" class="row-chk" id="chk-all-ativos" onchange="_toggleAllVisible('ativos','ativos-tbody',this.checked)"></th>
-          <th style="padding-left:8px">Patrimônio</th>
-          <th>Equipamento</th>
-          <th>Cliente</th>
-          <th>Tipo</th>
-          <th>Usuário</th>
-          <th>IP / Hostname</th>
-          <th>Status</th>
+          <th class="sortable" style="padding-left:8px" onclick="_toggleSort('ativos','patrimonio')">Patrimônio<span class="si" id="si-ativos-patrimonio">⇅</span></th>
+          <th class="sortable" onclick="_toggleSort('ativos','nome')">Equipamento<span class="si" id="si-ativos-nome">⇅</span></th>
+          <th class="sortable" onclick="_toggleSort('ativos','cliente')">Cliente<span class="si" id="si-ativos-cliente">⇅</span></th>
+          <th class="sortable" onclick="_toggleSort('ativos','tipo')">Tipo<span class="si" id="si-ativos-tipo">⇅</span></th>
+          <th class="sortable" onclick="_toggleSort('ativos','usuario')">Usuário<span class="si" id="si-ativos-usuario">⇅</span></th>
+          <th class="sortable" onclick="_toggleSort('ativos','ip')">IP / Hostname<span class="si" id="si-ativos-ip">⇅</span></th>
+          <th class="sortable" onclick="_toggleSort('ativos','status')">Status<span class="si" id="si-ativos-status">⇅</span></th>
           <th></th>
         </tr></thead>
         <tbody id="ativos-tbody"></tbody>
@@ -966,13 +980,13 @@
       <table>
         <thead><tr>
           <th style="width:38px;padding-left:14px"><input type="checkbox" class="row-chk" id="chk-all-usuarios" onchange="_toggleAllVisible('usuarios','usuarios-tbody',this.checked)"></th>
-          <th style="padding-left:8px">Funcionário</th>
-          <th>E-mail</th>
-          <th>Cargo</th>
-          <th>Setor</th>
-          <th>Gestor</th>
-          <th>Patrimônio</th>
-          <th>Status</th>
+          <th class="sortable" style="padding-left:8px" onclick="_toggleSort('usuarios','nome')">Funcionário<span class="si" id="si-usuarios-nome">⇅</span></th>
+          <th class="sortable" onclick="_toggleSort('usuarios','email')">E-mail<span class="si" id="si-usuarios-email">⇅</span></th>
+          <th class="sortable" onclick="_toggleSort('usuarios','cargo')">Cargo<span class="si" id="si-usuarios-cargo">⇅</span></th>
+          <th class="sortable" onclick="_toggleSort('usuarios','setor')">Setor<span class="si" id="si-usuarios-setor">⇅</span></th>
+          <th class="sortable" onclick="_toggleSort('usuarios','gestor')">Gestor<span class="si" id="si-usuarios-gestor">⇅</span></th>
+          <th class="sortable" onclick="_toggleSort('usuarios','patrimonio')">Patrimônio<span class="si" id="si-usuarios-patrimonio">⇅</span></th>
+          <th class="sortable" onclick="_toggleSort('usuarios','status')">Status<span class="si" id="si-usuarios-status">⇅</span></th>
           <th></th>
         </tr></thead>
         <tbody id="usuarios-tbody"></tbody>
@@ -1047,13 +1061,13 @@
       <table>
         <thead><tr>
           <th style="width:38px;padding-left:14px"><input type="checkbox" class="row-chk" id="chk-all-inventario" onchange="_toggleAllVisible('inventario','inv-tbody',this.checked)"></th>
-          <th style="padding-left:8px">Patrimônio</th>
-          <th>Tipo</th>
-          <th>Equipamento</th>
-          <th>Cliente</th>
-          <th>Usuário vinculado</th>
-          <th>Sistema Operacional</th>
-          <th>Status</th>
+          <th class="sortable" style="padding-left:8px" onclick="_toggleSort('inventario','patrimonio')">Patrimônio<span class="si" id="si-inventario-patrimonio">⇅</span></th>
+          <th class="sortable" onclick="_toggleSort('inventario','tipo')">Tipo<span class="si" id="si-inventario-tipo">⇅</span></th>
+          <th class="sortable" onclick="_toggleSort('inventario','marca')">Equipamento<span class="si" id="si-inventario-marca">⇅</span></th>
+          <th class="sortable" onclick="_toggleSort('inventario','cliente')">Cliente<span class="si" id="si-inventario-cliente">⇅</span></th>
+          <th class="sortable" onclick="_toggleSort('inventario','usuario')">Usuário vinculado<span class="si" id="si-inventario-usuario">⇅</span></th>
+          <th class="sortable" onclick="_toggleSort('inventario','so')">Sistema Operacional<span class="si" id="si-inventario-so">⇅</span></th>
+          <th class="sortable" onclick="_toggleSort('inventario','status')">Status<span class="si" id="si-inventario-status">⇅</span></th>
           <th></th>
         </tr></thead>
         <tbody id="inv-tbody"></tbody>
@@ -3009,10 +3023,15 @@
   function renderClients() {
     const grid = document.getElementById('clients-grid');
     const search = (document.getElementById('cli-search')?.value || '').toLowerCase();
-    const filtered = clients.filter(c => {
+    let filtered = clients.filter(c => {
       if (currentFilter !== 'todos' && c.status !== currentFilter) return false;
       if (search && !(c.nome||'').toLowerCase().includes(search) && !(c.cnpj||'').toLowerCase().includes(search) && !(c.resp||'').toLowerCase().includes(search) && !(c.email||'').toLowerCase().includes(search)) return false;
       return true;
+    });
+    filtered = _applySort(filtered, 'clientes', {
+      nome:      c => c.nome,
+      segmento:  c => c.segmento,
+      status:    c => c.status,
     });
     if (!filtered.length) {
       grid.innerHTML = `<div style="grid-column:1/-1"><div class="empty">
@@ -3201,6 +3220,15 @@
       if (ft && a.tipo !== ft) return false;
       if (fs && a.status !== fs) return false;
       return true;
+    });
+    list = _applySort(list, 'ativos', {
+      patrimonio: a => a.patrimonio,
+      nome:       a => a.nome,
+      cliente:    a => clienteNome(a.clienteId),
+      tipo:       a => a.tipo,
+      usuario:    a => { const u = usuarios.find(u => String(u.id) === String(a.usuarioId)); return u?.nome || ''; },
+      ip:         a => a.ip || a.hostname,
+      status:     a => a.status,
     });
 
     if (!list.length) {
@@ -4871,6 +4899,15 @@
       if (fs && i.status !== fs) return false;
       return true;
     });
+    list = _applySort(list, 'inventario', {
+      patrimonio: i => i.patrimonio,
+      tipo:       i => i.tipo,
+      marca:      i => [i.marca, i.modelo].filter(Boolean).join(' '),
+      cliente:    i => clienteNome(i.clienteId),
+      usuario:    i => { const u = usuarios.find(u => String(u.id) === String(i.usuarioId)); return u?.nome || ''; },
+      so:         i => i.so,
+      status:     i => i.status,
+    });
 
     if (!list.length) {
       tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;color:var(--muted);padding:40px">
@@ -5116,6 +5153,15 @@
       if (fs && u.setor !== fs) return false;
       if (fst && u.status !== fst) return false;
       return true;
+    });
+    list = _applySort(list, 'usuarios', {
+      nome:       u => u.nome,
+      email:      u => u.email,
+      cargo:      u => u.cargo,
+      setor:      u => u.setor,
+      gestor:     u => u.gestor,
+      patrimonio: u => { const a = ativos.find(a => String(a.id) === String(u.patrimonioId)) || ativos.find(a => String(a.usuarioId) === String(u.id)); return a?.nome || ''; },
+      status:     u => u.status,
     });
 
     if (!list.length) {
@@ -5708,6 +5754,57 @@
     const ok = await api('DELETE', '/inventario/' + id);
     if (ok) { inventario = inventario.filter(x => x.id !== id); renderInventario(); updateInvBadge(); renderDashboard(); showToast('🗑️ Item removido.'); }
   };
+
+  // ── ORDENAÇÃO DE COLUNAS ─────────────────────────────────
+  const _sort = {
+    ativos:    { col: null, dir: 1 },
+    usuarios:  { col: null, dir: 1 },
+    inventario:{ col: null, dir: 1 },
+    clientes:  { col: null, dir: 1 },
+  };
+
+  function _toggleSort(mod, col) {
+    if (_sort[mod].col === col) _sort[mod].dir *= -1;
+    else { _sort[mod].col = col; _sort[mod].dir = 1; }
+    _updateSortIcons(mod);
+    if (mod === 'ativos')     renderAtivos();
+    else if (mod === 'usuarios')   renderUsuarios();
+    else if (mod === 'inventario') renderInventario();
+    else if (mod === 'clientes')   renderClients();
+  }
+
+  function _updateSortIcons(mod) {
+    const { col, dir } = _sort[mod];
+    document.querySelectorAll(`[id^="si-${mod}-"]`).forEach(el => {
+      const elCol = el.id.slice(`si-${mod}-`.length);
+      const th = el.closest('th') || el; // pill or th
+      const si = el.classList.contains('sort-pill') ? el.querySelector('.si') : el.querySelector ? el : el;
+      const icon = el.classList.contains('sort-pill') ? el.querySelector('.si') : el;
+      const isActive = col === elCol;
+      if (el.classList.contains('sort-pill')) {
+        el.classList.toggle('sort-asc', isActive && dir === 1);
+        el.classList.toggle('sort-desc', isActive && dir === -1);
+        icon.textContent = isActive ? (dir === 1 ? '↑' : '↓') : '⇅';
+      } else {
+        th.classList.toggle('sort-asc', isActive && dir === 1);
+        th.classList.toggle('sort-desc', isActive && dir === -1);
+        el.textContent = isActive ? (dir === 1 ? '↑' : '↓') : '⇅';
+      }
+    });
+  }
+
+  function _applySort(list, mod, getters) {
+    const { col, dir } = _sort[mod];
+    if (!col || !getters[col]) return list;
+    return [...list].sort((a, b) => {
+      const va = String(getters[col](a) ?? '').toLowerCase();
+      const vb = String(getters[col](b) ?? '').toLowerCase();
+      if (!isNaN(va) && !isNaN(vb) && va !== '' && vb !== '')
+        return (parseFloat(va) - parseFloat(vb)) * dir;
+      return va.localeCompare(vb, 'pt-BR', { sensitivity: 'base' }) * dir;
+    });
+  }
+  // ── FIM ORDENAÇÃO ─────────────────────────────────────────
 
   // ── DIAGNÓSTICO & REPARO ──────────────────────────────────
   let _diagRepairs = [];
