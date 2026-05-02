@@ -501,6 +501,7 @@
   .config-menu-item.active { background: rgba(79,142,247,0.12); color: var(--accent); font-weight: 500; }
   .config-panel { display: none; }
   .config-panel.active { display: block; }
+  #confirm-overlay.open { display:flex !important }
   th.sortable { cursor:pointer;user-select:none;white-space:nowrap;transition:color .15s }
   th.sortable:hover { color:var(--accent) }
   th.sortable .si { font-size:10px;margin-left:3px;opacity:.45;vertical-align:middle }
@@ -2938,6 +2939,19 @@
   </div>
 </div>
 
+<!-- CONFIRM DIALOG -->
+<div id="confirm-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:9998;align-items:center;justify-content:center;padding:20px">
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:36px 32px;max-width:440px;width:100%;box-shadow:0 24px 64px rgba(0,0,0,.5);animation:slideUp .2s ease">
+    <div id="confirm-icon" style="font-size:44px;text-align:center;margin-bottom:14px"></div>
+    <div id="confirm-title" style="font-size:18px;font-weight:700;color:var(--text);text-align:center;margin-bottom:10px"></div>
+    <div id="confirm-msg" style="font-size:13px;color:var(--muted);text-align:center;line-height:1.65;margin-bottom:28px"></div>
+    <div style="display:flex;gap:10px;justify-content:center">
+      <button class="btn btn-ghost" style="min-width:110px" onclick="_closeConfirm(false)">Cancelar</button>
+      <button id="confirm-ok-btn" class="btn" style="min-width:140px" onclick="_closeConfirm(true)"></button>
+    </div>
+  </div>
+</div>
+
 <!-- TOAST -->
 <div class="toast" id="toast">
   <div class="toast-dot"></div>
@@ -3261,9 +3275,12 @@
           : '<span style="color:var(--muted);font-size:12px">— Disponível</span>'}</td>
         <td style="font-family:var(--mono);font-size:12px;color:var(--muted)">${[a.ip,a.hostname].filter(Boolean).join(' / ')||'—'}</td>
         <td><span class="badge ${ATIVO_STATUS_BADGE[a.status]||'badge-green'} badge-dot">${ATIVO_STATUS_LABEL[a.status]||a.status}</span></td>
-        <td>
-          <button class="action-btn" onclick="editAtivo(${a.id})">✏️</button>
-          <button class="action-btn" onclick="deleteAtivo(${a.id})">🗑️</button>
+        <td style="white-space:nowrap">
+          <button class="action-btn" onclick="editAtivo(${a.id})" title="Editar">✏️</button>
+          ${a.status === 'em_uso' || a.status === 'ativo'
+            ? `<button class="action-btn" onclick="inativarAtivo(${a.id})" title="Inativar" style="color:#f59e0b">⏸</button>`
+            : ''}
+          <button class="action-btn" onclick="deleteAtivo(${a.id})" title="Excluir">🗑️</button>
         </td>
       </tr>`;
     }).join('');
@@ -5200,9 +5217,12 @@
           ? `<div style="font-family:var(--mono);font-size:12px">${patrimonio.patrimonio ? '<span class="patrimonio-badge" style="font-size:10px;padding:2px 6px">' + patrimonio.patrimonio + '</span> ' : ''}${patrimonio.nome}</div>${todosAtivos.length > 1 ? '<div style="font-size:10px;color:var(--accent)">+' + (todosAtivos.length-1) + ' outro' + (todosAtivos.length>2?'s':'') + '</div>' : ''}`
           : '—'}</td>
         <td><span class="badge ${statusMap[u.status]||'badge-green'} badge-dot">${statusLabel[u.status]||u.status}</span></td>
-        <td onclick="event.stopPropagation()">
-          <button class="action-btn" onclick="openUserModal(${u.id})">✏️</button>
-          <button class="action-btn" onclick="deleteUser(${u.id})">🗑️</button>
+        <td onclick="event.stopPropagation()" style="white-space:nowrap">
+          <button class="action-btn" onclick="openUserModal(${u.id})" title="Editar">✏️</button>
+          ${u.status === 'ativo'
+            ? `<button class="action-btn" onclick="inativarUsuario(${u.id})" title="Inativar" style="color:#f59e0b">⏸</button>`
+            : ''}
+          <button class="action-btn" onclick="deleteUser(${u.id})" title="Excluir">🗑️</button>
         </td>
       </tr>`;
     }).join('');
@@ -5510,6 +5530,95 @@
     return { ...u, clienteId: u.cliente_id, patrimonioId: u.patrimonio_id,
       programas: u.programas || [], permissoes: u.permissoes || [] };
   }
+
+  // ── CONFIRMAÇÃO CUSTOMIZADA ───────────────────────────────
+  let _confirmResolver = null;
+  function _confirm(icon, title, msg, btnLabel, btnColor) {
+    return new Promise(resolve => {
+      _confirmResolver = resolve;
+      document.getElementById('confirm-icon').textContent = icon;
+      document.getElementById('confirm-title').textContent = title;
+      document.getElementById('confirm-msg').innerHTML = msg;
+      const btn = document.getElementById('confirm-ok-btn');
+      btn.textContent = btnLabel;
+      btn.style.cssText = `min-width:140px;background:${btnColor||'var(--red)'};color:#fff;border:none`;
+      document.getElementById('confirm-overlay').classList.add('open');
+    });
+  }
+  function _closeConfirm(val) {
+    document.getElementById('confirm-overlay').classList.remove('open');
+    if (_confirmResolver) { _confirmResolver(val); _confirmResolver = null; }
+  }
+
+  // ── INATIVAÇÃO EM CASCATA ─────────────────────────────────
+  async function inativarUsuario(id) {
+    const u = usuarios.find(x => x.id === id);
+    if (!u) return;
+    const atvsVinc = ativos.filter(a => String(a.usuarioId) === String(id));
+    const invVinc  = inventario.filter(i => String(i.usuarioId) === String(id));
+    const total = atvsVinc.length + invVinc.length;
+
+    const ok = await _confirm(
+      '⚠️',
+      `Inativar ${u.nome}?`,
+      `O funcionário será marcado como <strong>inativo</strong> em todo o sistema.`
+      + (total ? `<br><br>${total} equipamento${total!==1?'s':''} vinculado${total!==1?'s':''} `
+        + `ser${total!==1?'ão':'á'} liberado${total!==1?'s':''} e ficar${total!==1?'ão':'á'} <strong>disponível${total!==1?'is':''}</strong>.`
+        : `<br><br>Nenhum equipamento vinculado será afetado.`)
+      + `<br><br><span style="color:var(--red);font-size:12px">Esta ação afeta todos os módulos do sistema.</span>`,
+      'Sim, inativar',
+      '#f59e0b'
+    );
+    if (!ok) return;
+
+    const res = await api('PUT', '/usuarios/' + id, _buildUserBody(u, { status: 'inativo' }), true);
+    if (!res) { showToast('❌ Erro ao inativar usuário.'); return; }
+    usuarios = usuarios.map(x => x.id === id ? mapUser(res) : x);
+
+    for (const a of atvsVinc) {
+      const upd = await api('PUT', '/ativos/' + a.id, _buildAtivoBody(a, { usuario_id: null, status: 'disponivel' }), true);
+      if (upd) ativos = ativos.map(x => x.id === a.id ? mapAtivo(upd) : x);
+    }
+    for (const i of invVinc) {
+      const body = { patrimonio:i.patrimonio, tipo:i.tipo, marca:i.marca||'', modelo:i.modelo||'', serial:i.serial||'', aquisicao:i.aquisicao||'', cpu:i.cpu||'', ram:i.ram||'', hd:i.hd||'', so:i.so||'', imei:i.imei||'', chip:i.chip||'', status:'disponivel', usuario_id:null, cliente_id:i.clienteId, local:i.local||'', garantia:i.garantia||'', obs:i.obs||'' };
+      const upd = await api('PUT', '/inventario/' + i.id, body, true);
+      if (upd) inventario = inventario.map(x => x.id === i.id ? { ...upd, clienteId: upd.cliente_id, usuarioId: upd.usuario_id } : x);
+    }
+
+    renderUsuarios(); renderAtivos(); renderInventario(); renderDashboard();
+    const msg = total ? `✅ ${u.nome} inativado · ${total} equipamento${total!==1?'s':''} liberado${total!==1?'s':''}.` : `✅ ${u.nome} inativado.`;
+    showToast(msg);
+  }
+
+  async function inativarAtivo(id) {
+    const a = ativos.find(x => x.id === id);
+    if (!a) return;
+    const usuario = a.usuarioId ? usuarios.find(u => String(u.id) === String(a.usuarioId)) : null;
+
+    const ok = await _confirm(
+      '⚠️',
+      `Inativar "${a.nome}"?`,
+      `O equipamento será marcado como <strong>inativo</strong> em todo o sistema.`
+      + (usuario ? `<br><br>O vínculo com <strong>${usuario.nome}</strong> será removido automaticamente.` : '')
+      + `<br><br><span style="color:var(--red);font-size:12px">Esta ação afeta todos os módulos do sistema.</span>`,
+      'Sim, inativar',
+      '#f59e0b'
+    );
+    if (!ok) return;
+
+    const res = await api('PUT', '/ativos/' + id, _buildAtivoBody(a, { status: 'inativo', usuario_id: null }), true);
+    if (!res) { showToast('❌ Erro ao inativar ativo.'); return; }
+    ativos = ativos.map(x => x.id === id ? mapAtivo(res) : x);
+
+    if (usuario && String(usuario.patrimonioId) === String(id)) {
+      const upd = await api('PUT', '/usuarios/' + usuario.id, _buildUserBody(usuario, { patrimonio_id: null }), true);
+      if (upd) usuarios = usuarios.map(x => x.id === usuario.id ? mapUser(upd) : x);
+    }
+
+    renderAtivos(); renderUsuarios(); renderDashboard();
+    showToast(`✅ "${a.nome}" inativado.`);
+  }
+  // ── FIM INATIVAÇÃO ────────────────────────────────────────
 
   // ── HELPERS DE SINCRONIZAÇÃO ─────────────────────────────
   function _buildAtivoBody(a, overrides = {}) {
