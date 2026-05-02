@@ -3229,8 +3229,8 @@
         <td>${usuario
           ? `<div style="display:flex;align-items:center;gap:8px">
               <div class="user-avatar" style="background:${getColor(usuario.nome)};width:26px;height:26px;font-size:10px">${getInitials(usuario.nome)}</div>
-              <div style="font-size:13px">${usuario.nome}</div></div>`
-          : '<span style="color:var(--muted);font-size:12px">—</span>'}</td>
+              <div><div style="font-size:13px;font-weight:500">${usuario.nome}</div>${usuario.setor ? '<div style="font-size:11px;color:var(--muted)">' + usuario.setor + '</div>' : ''}</div></div>`
+          : '<span style="color:var(--muted);font-size:12px">— Disponível</span>'}</td>
         <td style="font-family:var(--mono);font-size:12px;color:var(--muted)">${[a.ip,a.hostname].filter(Boolean).join(' / ')||'—'}</td>
         <td><span class="badge ${ATIVO_STATUS_BADGE[a.status]||'badge-green'} badge-dot">${ATIVO_STATUS_LABEL[a.status]||a.status}</span></td>
         <td>
@@ -5130,7 +5130,11 @@
       const ini = getInitials(u.nome);
       const statusMap = { ativo:'badge-green', inativo:'badge-red', ferias:'badge-amber', afastado:'badge-blue' };
       const statusLabel = { ativo:'Ativo', inativo:'Inativo', ferias:'Férias', afastado:'Afastado' };
-      const patrimonio = u.patrimonioId ? ativos.find(a => String(a.id) === String(u.patrimonioId)) : null;
+      // Patrimônio: prioriza patrimonio_id explícito, fallback para qualquer ativo com usuario_id = user
+      const patrimonio = u.patrimonioId
+        ? ativos.find(a => String(a.id) === String(u.patrimonioId))
+        : ativos.find(a => String(a.usuarioId) === String(u.id));
+      const todosAtivos = ativos.filter(a => String(a.usuarioId) === String(u.id));
       return `<tr style="cursor:pointer" onclick="openDetailPanel(${u.id})">
         <td style="width:38px;padding-left:14px" onclick="event.stopPropagation()"><input type="checkbox" class="row-chk" value="${u.id}" ${_sel.usuarios.has(u.id)?'checked':''} onchange="_toggleSel('usuarios',${u.id},this.checked)"></td>
         <td style="padding-left:20px">
@@ -5146,7 +5150,9 @@
         <td style="font-size:13px;color:var(--muted)">${u.cargo||'—'}</td>
         <td style="font-size:13px;color:var(--muted)">${u.setor||'—'}</td>
         <td style="font-size:13px;color:var(--muted)">${u.gestor||'—'}</td>
-        <td style="font-size:12.5px;font-family:var(--mono);color:var(--muted)">${patrimonio ? patrimonio.nome : '—'}</td>
+        <td style="font-size:12.5px;color:var(--muted)">${patrimonio
+          ? `<div style="font-family:var(--mono);font-size:12px">${patrimonio.patrimonio ? '<span class="patrimonio-badge" style="font-size:10px;padding:2px 6px">' + patrimonio.patrimonio + '</span> ' : ''}${patrimonio.nome}</div>${todosAtivos.length > 1 ? '<div style="font-size:10px;color:var(--accent)">+' + (todosAtivos.length-1) + ' outro' + (todosAtivos.length>2?'s':'') + '</div>' : ''}`
+          : '—'}</td>
         <td><span class="badge ${statusMap[u.status]||'badge-green'} badge-dot">${statusLabel[u.status]||u.status}</span></td>
         <td onclick="event.stopPropagation()">
           <button class="action-btn" onclick="openUserModal(${u.id})">✏️</button>
@@ -5459,6 +5465,30 @@
       programas: u.programas || [], permissoes: u.permissoes || [] };
   }
 
+  // ── HELPERS DE SINCRONIZAÇÃO ─────────────────────────────
+  function _buildAtivoBody(a, overrides = {}) {
+    return {
+      nome: a.nome, tipo: a.tipo, patrimonio: a.patrimonio||'',
+      marca: a.marca||'', modelo: a.modelo||'', serial: a.serial||'',
+      aquisicao: a.aquisicao||'', cpu: a.cpu||'', ram: a.ram||'',
+      hd: a.hd||'', so: a.so||'', imei: a.imei||'', chip: a.chip||'',
+      hostname: a.hostname||'', ip: a.ip||'', status: a.status||'em_uso',
+      usuario_id: a.usuarioId ? parseInt(a.usuarioId) : null,
+      cliente_id: a.clienteId, local: a.local||'', garantia: a.garantia||'', obs: a.obs||'',
+      ...overrides
+    };
+  }
+  function _buildUserBody(u, overrides = {}) {
+    return {
+      nome: u.nome, cliente_id: u.clienteId,
+      cargo: u.cargo||'', email: u.email||'', email2: u.email2||'',
+      tel: u.tel||'', setor: u.setor||'', gestor: u.gestor||'',
+      admissao: u.admissao||'', login: u.login||'', obs: u.obs||'',
+      status: u.status||'ativo', programas: u.programas||[], permissoes: u.permissoes||[],
+      patrimonio_id: u.patrimonioId ? parseInt(u.patrimonioId) : null,
+      ...overrides
+    };
+  }
   // ── CLIENTES (API) ────────────────────────────────────────
   async function saveClient() {
     const nome = document.getElementById('f-nome').value.trim();
@@ -5492,6 +5522,8 @@
     if (!tipo) { showToast('⚠️ Selecione o tipo.'); return; }
     if (!clienteId) { showToast('⚠️ Selecione o cliente.'); return; }
     const usuarioId = document.getElementById('a-usuario')?.value;
+    // Captura usuário anterior antes de salvar (para desfazer vínculo antigo)
+    const oldUsuarioId = editingAtivoId ? (ativos.find(a => a.id === editingAtivoId)?.usuarioId || null) : null;
     const body = {
       nome, tipo, cliente_id: parseInt(clienteId),
       patrimonio: document.getElementById('a-patrimonio').value.trim(),
@@ -5521,14 +5553,43 @@
       result = await api('POST', '/ativos', body);
       if (result) { ativos.push(mapAtivo(result)); showToast('✅ Ativo salvo!'); }
     }
-    if (result) { closeAtivoModal(); renderAtivos(); updateAtivosBadge(); renderDashboard(); }
+    if (result) {
+      const newUsuarioId = result.usuario_id;
+      // Sync bidirecional: usuário antigo perde patrimônio se apontava para este ativo
+      if (oldUsuarioId && String(oldUsuarioId) !== String(newUsuarioId)) {
+        const oldUser = usuarios.find(u => u.id === +oldUsuarioId);
+        if (oldUser && +oldUser.patrimonioId === result.id) {
+          const upd = await api('PUT', '/usuarios/' + oldUsuarioId, _buildUserBody(oldUser, { patrimonio_id: null }), true);
+          if (upd) usuarios = usuarios.map(u => u.id === +oldUsuarioId ? mapUser(upd) : u);
+        }
+      }
+      // Sync bidirecional: novo usuário ganha patrimônio se não tinha nenhum
+      if (newUsuarioId) {
+        const newUser = usuarios.find(u => u.id === +newUsuarioId);
+        if (newUser && !newUser.patrimonioId) {
+          const upd = await api('PUT', '/usuarios/' + newUsuarioId, _buildUserBody(newUser, { patrimonio_id: result.id }), true);
+          if (upd) usuarios = usuarios.map(u => u.id === +newUsuarioId ? mapUser(upd) : u);
+        }
+      }
+      closeAtivoModal(); renderAtivos(); renderUsuarios(); updateAtivosBadge(); renderDashboard();
+    }
   };
 
   deleteAtivo = async function(id) {
     const a = ativos.find(x => x.id === id);
     if (!a || !confirm(`Excluir o ativo "${a.nome}"?`)) return;
     const ok = await api('DELETE', '/ativos/' + id);
-    if (ok) { ativos = ativos.filter(x => x.id !== id); renderAtivos(); updateAtivosBadge(); renderDashboard(); showToast('🗑️ Ativo removido.'); }
+    if (ok) {
+      ativos = ativos.filter(x => x.id !== id);
+      // Limpa patrimônio_id do usuário que apontava para este ativo
+      const linkedUser = usuarios.find(u => +u.patrimonioId === id);
+      if (linkedUser) {
+        const upd = await api('PUT', '/usuarios/' + linkedUser.id, _buildUserBody(linkedUser, { patrimonio_id: null }), true);
+        if (upd) usuarios = usuarios.map(u => u.id === linkedUser.id ? mapUser(upd) : u);
+      }
+      renderAtivos(); renderUsuarios(); updateAtivosBadge(); renderDashboard();
+      showToast('🗑️ Ativo removido.');
+    }
   };
 
   // ── USUÁRIOS (API) ────────────────────────────────────────
@@ -5538,6 +5599,8 @@
     if (!nome) { document.getElementById('u-nome').focus(); showToast('⚠️ Informe o nome.'); return; }
     if (!clienteId) { showToast('⚠️ Selecione o cliente.'); return; }
     const patrimonioId = document.getElementById('u-patrimonio').value;
+    // Captura patrimônio anterior antes de salvar (para desfazer vínculo antigo)
+    const oldPatId = editingUserId ? (usuarios.find(u => u.id === editingUserId)?.patrimonioId || null) : null;
     const body = {
       nome, cliente_id: parseInt(clienteId),
       cargo: document.getElementById('u-cargo').value.trim(),
@@ -5562,14 +5625,43 @@
       result = await api('POST', '/usuarios', body);
       if (result) { usuarios.push(mapUser(result)); showToast('✅ Usuário salvo!'); }
     }
-    if (result) { closeUserModal(); renderUsuarios(); updateUsuariosBadge(); renderDashboard(); }
+    if (result) {
+      const newPatId = result.patrimonio_id;
+      // Sync bidirecional: patrimônio antigo perde usuário se apontava para este funcionário
+      if (oldPatId && String(oldPatId) !== String(newPatId)) {
+        const oldAtivo = ativos.find(a => a.id === +oldPatId);
+        if (oldAtivo && +oldAtivo.usuarioId === result.id) {
+          const upd = await api('PUT', '/ativos/' + oldPatId, _buildAtivoBody(oldAtivo, { usuario_id: null }), true);
+          if (upd) ativos = ativos.map(a => a.id === +oldPatId ? mapAtivo(upd) : a);
+        }
+      }
+      // Sync bidirecional: novo patrimônio recebe este usuário
+      if (newPatId) {
+        const newAtivo = ativos.find(a => a.id === +newPatId);
+        if (newAtivo && String(newAtivo.usuarioId) !== String(result.id)) {
+          const upd = await api('PUT', '/ativos/' + newPatId, _buildAtivoBody(newAtivo, { usuario_id: result.id }), true);
+          if (upd) ativos = ativos.map(a => a.id === +newPatId ? mapAtivo(upd) : a);
+        }
+      }
+      closeUserModal(); renderUsuarios(); renderAtivos(); updateUsuariosBadge(); renderDashboard();
+    }
   };
 
   deleteUser = async function(id) {
     const u = usuarios.find(x => x.id === id);
     if (!u || !confirm(`Excluir o usuário "${u.nome}"?`)) return;
     const ok = await api('DELETE', '/usuarios/' + id);
-    if (ok) { usuarios = usuarios.filter(x => x.id !== id); renderUsuarios(); updateUsuariosBadge(); renderDashboard(); showToast('🗑️ Usuário removido.'); }
+    if (ok) {
+      usuarios = usuarios.filter(x => x.id !== id);
+      // Limpa usuario_id de todos os ativos que apontavam para este usuário
+      const linkedAtivos = ativos.filter(a => +a.usuarioId === id);
+      for (const a of linkedAtivos) {
+        const upd = await api('PUT', '/ativos/' + a.id, _buildAtivoBody(a, { usuario_id: null }), true);
+        if (upd) ativos = ativos.map(x => x.id === a.id ? mapAtivo(upd) : x);
+      }
+      renderUsuarios(); renderAtivos(); updateUsuariosBadge(); renderDashboard();
+      showToast('🗑️ Usuário removido.');
+    }
   };
 
   // ── INVENTÁRIO (API) ──────────────────────────────────────
