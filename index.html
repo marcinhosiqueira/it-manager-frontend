@@ -140,6 +140,21 @@
     margin-left: auto; background: var(--accent); color: #fff;
     font-size: 10px; font-weight: 600; padding: 2px 6px; border-radius: 99px;
   }
+  .nav-subnav {
+    margin: 2px 0 4px 18px;
+    padding-left: 12px;
+    border-left: 1px solid var(--border2);
+    display: flex; flex-direction: column; gap: 1px;
+  }
+  .nav-subitem {
+    display: flex; align-items: center; gap: 9px;
+    padding: 7px 10px; border-radius: 7px; cursor: pointer;
+    color: var(--muted); font-size: 12.5px; font-weight: 400;
+    transition: all .15s; border: none; background: none; width: 100%; text-align: left;
+  }
+  .nav-subitem:hover { background: var(--surface2); color: var(--text); }
+  .nav-subitem.active { background: rgba(79,142,247,0.1); color: var(--accent); font-weight: 500; }
+  .nav-subitem .icon { font-size: 14px; width: 18px; text-align: center; }
 
   .sidebar-footer {
     padding: 16px; border-top: 1px solid var(--border);
@@ -695,22 +710,21 @@
       <span class="icon">👥</span> Clientes
       <span class="nav-badge" id="badge-clientes">0</span>
     </button>
-    <button class="nav-item" onclick="showPage('ativos')">
-      <span class="icon">🖥</span> Ativos
-      <span class="nav-badge" id="badge-ativos">0</span>
-    </button>
     <button class="nav-item" onclick="showPage('usuarios')">
       <span class="icon">🔑</span> Usuários
       <span class="nav-badge" id="badge-usuarios">0</span>
     </button>
-    <button class="nav-item" onclick="showPage('permissoes')">
-      <span class="icon">🛡</span> Permissões
-      <span class="nav-badge" id="badge-permissoes">0</span>
-    </button>
-    <button class="nav-item" onclick="showPage('antivirus')">
-      <span class="icon">🔒</span> Antivírus
-      <span class="nav-badge" id="badge-antivirus">0</span>
-    </button>
+    <div class="nav-subnav">
+      <button class="nav-subitem" id="subnav-ativos" onclick="showPage('ativos')">
+        <span class="icon">🖥</span> Ativos
+      </button>
+      <button class="nav-subitem" id="subnav-permissoes" onclick="showPage('permissoes')">
+        <span class="icon">🛡</span> Permissões
+      </button>
+      <button class="nav-subitem" id="subnav-antivirus" onclick="showPage('antivirus')">
+        <span class="icon">🔒</span> Antivírus
+      </button>
+    </div>
     <button class="nav-item" onclick="showPage('relatorios')">
       <span class="icon">📊</span> Relatórios
     </button>
@@ -2973,29 +2987,43 @@
     return COLORS[Math.abs(hash) % COLORS.length];
   }
 
+  const _SUBITEMS = new Set(['ativos', 'permissoes', 'antivirus']);
+
   function showPage(id) {
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.querySelectorAll('.nav-subitem').forEach(n => n.classList.remove('active'));
     document.getElementById('page-' + id).classList.add('active');
-    const labels = { dashboard:'Dashboard', clientes:'Clientes', ativos:'Ativos', usuarios:'Usuários', permissoes:'Permissões', antivirus:'Antivírus', relatorios:'Relatórios', base:'Base de Conhecimento', configuracoes:'Configurações' };
+
+    const labels = { dashboard:'Dashboard', clientes:'Clientes', ativos:'Ativos', usuarios:'Usuários', permissoes:'Permissões', antivirus:'Antivírus', relatorios:'Relatórios', base:'Base de Conhecimento', configuracoes:'Configurações', inventario:'Inventário' };
     document.getElementById('topbar-title').textContent = labels[id] || id;
-    const nav = [...document.querySelectorAll('.nav-item')].find(n => n.textContent.trim().toLowerCase().startsWith(id.substring(0,4)));
-    if (nav) nav.classList.add('active');
-    if (id === 'clientes') renderClients();
-    if (id === 'dashboard') renderDashboard();
-    if (id === 'ativos') { populateClienteSelects(); renderAtivos(); }
-    if (id === 'inventario') { populateInvSelects(); renderInventario(); }
-    if (id === 'usuarios') { populateUserSelects(); renderUsuarios(); }
-    if (id === 'permissoes') { populatePermSelects(); renderPermissoes(); }
-    if (id === 'antivirus') { populateAvSelects(); renderAntivirus(); }
-    if (id === 'relatorios') {
+
+    if (_SUBITEMS.has(id)) {
+      // Sub-item: destaca Usuários no nav principal + o sub-item correspondente
+      const navUsr = [...document.querySelectorAll('.nav-item')].find(n => n.textContent.trim().startsWith('Usuários'));
+      if (navUsr) navUsr.classList.add('active');
+      const sub = document.getElementById('subnav-' + id);
+      if (sub) sub.classList.add('active');
+    } else {
+      const nav = [...document.querySelectorAll('.nav-item')].find(n => n.textContent.trim().toLowerCase().startsWith(id.substring(0,4)));
+      if (nav) nav.classList.add('active');
+    }
+
+    if (id === 'clientes')    renderClients();
+    if (id === 'dashboard')   renderDashboard();
+    if (id === 'ativos')      { populateClienteSelects(); renderAtivos(); }
+    if (id === 'inventario')  { populateInvSelects(); renderInventario(); }
+    if (id === 'usuarios')    { populateUserSelects(); renderUsuarios(); }
+    if (id === 'permissoes')  { populatePermSelects(); renderPermissoes(); }
+    if (id === 'antivirus')   { populateAvSelects(); renderAntivirus(); }
+    if (id === 'relatorios')  {
       showRelTab('modelos');
       const fc = document.getElementById('report-filter-cliente');
       if (fc) fc.innerHTML = '<option value="">Todos os clientes</option>'
         + clients.map(c => `<option value="${c.id}">${c.nome}</option>`).join('');
     }
-    if (id === 'base') { voltarLista(); renderBase(); }
-    if (id === 'configuracoes') { showConfigPanel('perfil', document.querySelector('.config-menu-item')); }
+    if (id === 'base')           { voltarLista(); renderBase(); }
+    if (id === 'configuracoes')  { showConfigPanel('perfil', document.querySelector('.config-menu-item')); }
   }
 
   function renderDashboard() {
