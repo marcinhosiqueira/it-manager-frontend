@@ -141,11 +141,15 @@
     font-size: 10px; font-weight: 600; padding: 2px 6px; border-radius: 99px;
   }
   .nav-subnav {
-    margin: 2px 0 4px 18px;
+    margin: 0 0 2px 18px;
     padding-left: 12px;
     border-left: 1px solid var(--border2);
     display: flex; flex-direction: column; gap: 1px;
+    overflow: hidden;
+    max-height: 0;
+    transition: max-height .25s ease, margin .25s ease;
   }
+  .nav-subnav.open { max-height: 200px; margin-top: 2px; margin-bottom: 4px; }
   .nav-subitem {
     display: flex; align-items: center; gap: 9px;
     padding: 7px 10px; border-radius: 7px; cursor: pointer;
@@ -155,6 +159,11 @@
   .nav-subitem:hover { background: var(--surface2); color: var(--text); }
   .nav-subitem.active { background: rgba(79,142,247,0.1); color: var(--accent); font-weight: 500; }
   .nav-subitem .icon { font-size: 14px; width: 18px; text-align: center; }
+  .nav-chevron {
+    margin-left: auto; font-size: 11px; color: var(--muted);
+    transition: transform .25s ease; display: inline-block;
+  }
+  .nav-chevron.open { transform: rotate(90deg); }
 
   .sidebar-footer {
     padding: 16px; border-top: 1px solid var(--border);
@@ -708,13 +717,15 @@
     </button>
     <button class="nav-item" onclick="showPage('clientes')">
       <span class="icon">👥</span> Clientes
-      <span class="nav-badge" id="badge-clientes">0</span>
     </button>
-    <button class="nav-item" onclick="showPage('usuarios')">
+    <button class="nav-item" id="nav-usuarios-btn" onclick="_toggleUsuariosMenu(event)">
       <span class="icon">🔑</span> Usuários
-      <span class="nav-badge" id="badge-usuarios">0</span>
+      <span class="nav-chevron" id="nav-usuarios-chevron">▶</span>
     </button>
-    <div class="nav-subnav">
+    <div class="nav-subnav" id="nav-usuarios-sub">
+      <button class="nav-subitem" id="subnav-usuarios" onclick="showPage('usuarios')">
+        <span class="icon">👤</span> Funcionários
+      </button>
       <button class="nav-subitem" id="subnav-ativos" onclick="showPage('ativos')">
         <span class="icon">🖥</span> Ativos
       </button>
@@ -730,7 +741,6 @@
     </button>
     <button class="nav-item" onclick="showPage('base')">
       <span class="icon">📚</span> Base de Conhecimento
-      <span class="nav-badge" id="badge-base">0</span>
     </button>
     <div class="nav-label" style="margin-top:8px">Ferramentas</div>
     <button class="nav-item" onclick="abrirImport()">
@@ -2987,7 +2997,22 @@
     return COLORS[Math.abs(hash) % COLORS.length];
   }
 
-  const _SUBITEMS = new Set(['ativos', 'permissoes', 'antivirus']);
+  const _SUBITEMS = new Set(['usuarios', 'ativos', 'permissoes', 'antivirus']);
+
+  function _toggleUsuariosMenu(e) {
+    e.stopPropagation();
+    const sub = document.getElementById('nav-usuarios-sub');
+    const chevron = document.getElementById('nav-usuarios-chevron');
+    const isOpen = sub.classList.toggle('open');
+    chevron.classList.toggle('open', isOpen);
+  }
+
+  function _openUsuariosMenu() {
+    const sub = document.getElementById('nav-usuarios-sub');
+    const chevron = document.getElementById('nav-usuarios-chevron');
+    sub.classList.add('open');
+    chevron.classList.add('open');
+  }
 
   function showPage(id) {
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
@@ -2999,9 +3024,8 @@
     document.getElementById('topbar-title').textContent = labels[id] || id;
 
     if (_SUBITEMS.has(id)) {
-      // Sub-item: destaca Usuários no nav principal + o sub-item correspondente
-      const navUsr = [...document.querySelectorAll('.nav-item')].find(n => n.textContent.trim().startsWith('Usuários'));
-      if (navUsr) navUsr.classList.add('active');
+      document.getElementById('nav-usuarios-btn')?.classList.add('active');
+      _openUsuariosMenu();
       const sub = document.getElementById('subnav-' + id);
       if (sub) sub.classList.add('active');
     } else {
