@@ -6278,7 +6278,17 @@
     showToast('⏳ Lendo arquivo...');
     try {
       const buf = await file.arrayBuffer();
-      const wb = XLSX.read(buf, { type: 'array', cellDates: true });
+      const SENHA_PADRAO = 'Suport3mcrs';
+      let wb;
+      try {
+        // Tenta sem senha primeiro
+        wb = XLSX.read(buf, { type: 'array', cellDates: true });
+        // Se a planilha estiver protegida, SheetJS pode retornar sem sheets
+        if (!wb.SheetNames || wb.SheetNames.length === 0) throw new Error('protegida');
+      } catch (_) {
+        // Tenta com a senha padrão
+        wb = XLSX.read(buf, { type: 'array', cellDates: true, password: SENHA_PADRAO });
+      }
 
       const sheets = [];
       for (const name of wb.SheetNames) {
